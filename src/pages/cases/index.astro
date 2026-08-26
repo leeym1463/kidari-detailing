@@ -1,0 +1,91 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { caseCategoryOrder, caseCategoryLinks, caseCategorySlug } from '../../data/categories';
+
+const categoryIntro: Partial<Record<(typeof caseCategoryOrder)[number], string>> = {
+  '광택·유리막코팅':
+    '광택은 도장면을 연마해 흠집과 산화층을 제거하고 광채를 되살리는 작업이고, 유리막코팅은 그 위에 보호막을 입혀 광택과 발수 효과를 오래 유지시키는 작업입니다. 두 작업이 함께 진행된 사례가 많아 시공사례는 한 카테고리로 모아두었습니다.',
+};
+import { getPublishedCases, getHeroImagePath } from '../../utils/cases';
+import { itemListSchema, breadcrumbSchema } from '../../utils/schema';
+
+const title = '시공사례 | 키다리광택 (춘천)';
+const description =
+  '키다리광택이 실제로 진행한 광택·유리막코팅·외형복원·판금도색·스팀세차·에바크리닝·실내크리닝 시공사례 모음. 시공 전 상태와 작업 내용을 확인하세요.';
+
+const allCases = await getPublishedCases();
+
+const schema = [
+  breadcrumbSchema([
+    { name: '홈', path: '/' },
+    { name: '시공사례', path: '/cases' },
+  ]),
+  ...(allCases.length > 0
+    ? [itemListSchema(allCases.map((c) => ({ name: c.data.title, path: `/cases/${c.slug}` })))]
+    : []),
+];
+---
+
+<Layout title={title} description={description} path="/cases" schema={schema}>
+  <section class="page-hero">
+    <div class="wrap">
+      <p class="breadcrumb"><a href="/">홈</a> / 시공사례</p>
+      <h1>시공사례</h1>
+      <p class="lede">
+        시공사례는 키다리광택이 실제로 진행한 작업을 광택·유리막코팅·외형복원·판금도색·스팀세차·
+        에바크리닝·실내크리닝 카테고리별로 정리한 기록입니다. 차량 상태와 작업 내용을 구체적으로
+        확인하실 수 있습니다.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap section">
+    {allCases.length === 0 && (
+      <div class="empty-state" style="margin-bottom: 32px;">
+        아직 등록된 시공사례가 없습니다. 곧 실제 작업 사례를 순차적으로 업데이트할 예정입니다.
+        서비스별 안내는 아래 페이지에서 먼저 확인하실 수 있습니다.
+      </div>
+    )}
+
+    {caseCategoryOrder.map((category) => {
+      const items = allCases.filter((c) => c.data.category === category);
+      const links = caseCategoryLinks[category];
+      const intro = categoryIntro[category];
+      return (
+        <div style="margin-bottom: 40px;" id={caseCategorySlug[category]}>
+          <h2 class="faq-category-heading">{category}</h2>
+          {links && (
+            <p style="margin: 0 0 12px; font-size:0.9rem;">
+              {links.map((link, i) => [
+                i > 0 ? ' · ' : '',
+                <a href={link.href}>{link.label} 보기 →</a>,
+              ])}
+            </p>
+          )}
+          {intro && <p class="section-lead" style="margin-bottom:20px;">{intro}</p>}
+          {items.length === 0 ? (
+            <p class="empty-state">아직 등록된 {category} 시공사례가 없습니다.</p>
+          ) : (
+            <div class="case-grid">
+              {items.map((entry) => {
+                const heroImg = getHeroImagePath(entry.slug);
+                return (
+                  <article class="case-card">
+                    <span class="case-tag">{entry.data.category}</span>
+                    <h3>{entry.data.title}</h3>
+                    {entry.data.category !== '외형복원·판금도색' && (
+                      <p class="case-meta">{entry.data.vehicle}</p>
+                    )}
+                    <p class="summary">{entry.data.summary}</p>
+                    {heroImg && <img class="hero-img" src={heroImg} alt={entry.data.title} loading="lazy" />}
+                    <a class="more" href={`/cases/${entry.slug}`}>자세히 보기 →</a>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+</Layout>

@@ -1,0 +1,41 @@
+---
+import { caseCategorySlug, type CaseCategory } from '../data/categories';
+import { getPublishedCasesByCategory, getHeroImagePath } from '../utils/cases';
+
+interface Props {
+  category: CaseCategory;
+}
+
+const { category } = Astro.props;
+const cases = (await getPublishedCasesByCategory(category)).slice(0, 3);
+const casesHref = `/cases#${caseCategorySlug[category]}`;
+---
+
+<h2>관련 시공사례</h2>
+{cases.length === 0 ? (
+  <p class="empty-state">
+    아직 등록된 {category} 시공사례가 없습니다. 준비되는 대로 실제 작업 사례를 업데이트할
+    예정입니다. <a href="/cases">전체 시공사례 보기 →</a>
+  </p>
+) : (
+  <>
+    <div class="case-grid">
+      {cases.map((entry) => {
+        const heroImg = getHeroImagePath(entry.slug);
+        return (
+          <article class="case-card">
+            <span class="case-tag">{entry.data.category}</span>
+            <h3>{entry.data.title}</h3>
+            {category !== '외형복원·판금도색' && <p class="case-meta">{entry.data.vehicle}</p>}
+            <p class="summary">{entry.data.summary}</p>
+            {heroImg && <img class="hero-img" src={heroImg} alt={entry.data.title} loading="lazy" />}
+            <a class="more" href={`/cases/${entry.slug}`}>자세히 보기 →</a>
+          </article>
+        );
+      })}
+    </div>
+    <p style="margin-top:16px;">
+      <a href={casesHref}>{category} 시공사례 더 보기 →</a>
+    </p>
+  </>
+)}

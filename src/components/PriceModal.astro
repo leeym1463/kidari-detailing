@@ -1,0 +1,207 @@
+---
+import {
+  washTiers,
+  vehicleSizePrices,
+  washPriceNote,
+  evaCleaningPrice,
+} from '../data/washPricing';
+import { formatManwon } from '../utils/format';
+import { business } from '../data/business';
+---
+
+<dialog id="price-modal" class="price-modal">
+  <div class="price-modal-card">
+    <button type="button" class="price-modal-close" aria-label="닫기" data-price-modal-close>&times;</button>
+
+    <span class="price-modal-eyebrow">세차 요금 안내</span>
+    <h2 class="price-modal-title">차종·등급별 스팀세차 요금표</h2>
+    <p class="price-modal-note">{washPriceNote}</p>
+
+    <div class="price-modal-table-wrap">
+      <table class="price-modal-table">
+        <thead>
+          <tr>
+            <th scope="col">차량 크기</th>
+            {washTiers.map((tier) => <th scope="col">{tier.name}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {vehicleSizePrices.map((v) => (
+            <tr>
+              <th scope="row">{v.name}</th>
+              {washTiers.map((tier) => <td>{formatManwon(v.prices[tier.key])}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="price-modal-eva">에바크리닝(에어컨 냄새 제거) <strong>{formatManwon(evaCleaningPrice)}</strong></p>
+
+    <div class="price-modal-actions">
+      <a class="btn btn-primary" href={business.telephoneHref}>{business.telephoneDisplay} 전화하기</a>
+      <a class="btn btn-outline-primary" href="/steam-wash">등급별 상세 내용 보기</a>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .price-modal {
+    border: none;
+    border-radius: 16px;
+    padding: 0;
+    max-width: min(560px, calc(100vw - 32px));
+    width: 100%;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  }
+
+  .price-modal::backdrop {
+    background: rgba(5, 6, 8, 0.6);
+    backdrop-filter: blur(2px);
+  }
+
+  .price-modal-card {
+    position: relative;
+    background: var(--color-surface);
+    padding: 32px 28px 28px;
+  }
+
+  .price-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-bg-alt);
+    color: var(--color-text-muted);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .price-modal-close:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+  }
+
+  .price-modal-eyebrow {
+    display: inline-block;
+    color: var(--color-accent-dark);
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+
+  .price-modal-title {
+    margin: 0 0 6px;
+    font-size: 1.3rem;
+  }
+
+  .price-modal-note {
+    margin: 0 0 18px;
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+  }
+
+  .price-modal-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+  }
+
+  .price-modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    white-space: nowrap;
+  }
+
+  .price-modal-table th,
+  .price-modal-table td {
+    padding: 9px 12px;
+    text-align: center;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .price-modal-table thead th {
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .price-modal-table tbody th {
+    text-align: left;
+    font-weight: 700;
+    background: var(--color-bg-alt);
+  }
+
+  .price-modal-table tbody tr:last-child td,
+  .price-modal-table tbody tr:last-child th {
+    border-bottom: none;
+  }
+
+  .price-modal-eva {
+    margin: 0 0 22px;
+    font-size: 0.92rem;
+    color: var(--color-text);
+  }
+
+  .price-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .price-modal-actions .btn {
+    padding: 11px 18px;
+    font-size: 0.92rem;
+  }
+
+  @media (max-width: 480px) {
+    .price-modal-card {
+      padding: 26px 18px 20px;
+    }
+  }
+</style>
+
+<script>
+  const SEEN_KEY = 'kidari-price-modal-seen';
+  const dialog = document.getElementById('price-modal') as HTMLDialogElement | null;
+
+  function openModal() {
+    if (dialog && !dialog.open) dialog.showModal();
+  }
+
+  function closeModal() {
+    if (dialog && dialog.open) dialog.close();
+  }
+
+  if (dialog) {
+    dialog.querySelectorAll('[data-price-modal-close]').forEach((btn) => {
+      btn.addEventListener('click', closeModal);
+    });
+
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) closeModal();
+    });
+
+    dialog.addEventListener('close', () => {
+      sessionStorage.setItem(SEEN_KEY, '1');
+    });
+
+    if (!sessionStorage.getItem(SEEN_KEY)) {
+      openModal();
+    }
+  }
+
+  document.querySelectorAll('[data-open-price-modal]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal();
+    });
+  });
+</script>

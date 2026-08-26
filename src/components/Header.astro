@@ -1,0 +1,55 @@
+---
+import { navItems } from '../data/nav';
+import { business } from '../data/business';
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+function isCurrent(href: string) {
+  if (href === '/') return currentPath === '/';
+  return currentPath === href || currentPath.startsWith(href + '/');
+}
+---
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="/" class="brand">
+      <img src="/images/logo-kidari.png" alt={business.name} class="brand-logo" />
+      <span class="visually-hidden">{business.name}</span>
+    </a>
+
+    <div class="social-links">
+      <a href={business.naverBlogUrl} target="_blank" rel="noopener noreferrer" aria-label="네이버 블로그 바로가기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.6" />
+          <path d="M7 9h10M7 12.5h10M7 16h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </a>
+      <a href={business.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="인스타그램 바로가기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" stroke-width="1.6" />
+          <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6" />
+          <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" />
+        </svg>
+      </a>
+    </div>
+
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" />
+    <label for="nav-toggle" class="nav-toggle-label" aria-label="메뉴 열기">☰</label>
+
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <ul>
+        {navItems.map((item) => (
+          <li>
+            <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>

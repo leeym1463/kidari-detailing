@@ -1,0 +1,43 @@
+---
+import { navItems } from '../data/nav';
+import { business } from '../data/business';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>{business.name}</h4>
+        <p>{business.description}</p>
+      </div>
+      <div>
+        <h4>바로가기</h4>
+        <ul>
+          {navItems.map((item) => (
+            <li><a href={item.href}>{item.label}</a></li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <h4>연락처</h4>
+        <p>
+          <a href={business.telephoneHref}>{business.telephoneDisplay}</a>
+        </p>
+        <p>{business.fullAddressText}</p>
+        <p>{business.closedNote}</p>
+      </div>
+      <div>
+        <h4>SNS</h4>
+        <ul>
+          <li><a href={business.naverBlogUrl} target="_blank" rel="noopener noreferrer">네이버 블로그</a></li>
+          <li><a href={business.instagramUrl} target="_blank" rel="noopener noreferrer">인스타그램</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; {year} {business.name}. All rights reserved.
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,177 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PriceModal from '../components/PriceModal.astro';
+import { business } from '../data/business';
+import { services } from '../data/services';
+import { localBusinessSchema } from '../utils/schema';
+import { getPublishedCases, getPublishedCasesByCategory, getHeroImagePath } from '../utils/cases';
+
+const title = '키다리광택 | 강원도 춘천 자동차 광택·유리막코팅·외형복원 디테일링샵';
+const description =
+  '키다리광택은 강원도 춘천에서 광택을 전문으로 하는 디테일링샵으로, 유리막코팅·외형복원(판금도색)·스팀세차도 함께 진행합니다. 서비스별 가격과 절차를 확인하세요.';
+
+const glossCases = await getPublishedCasesByCategory('광택·유리막코팅');
+const restorationCases = await getPublishedCasesByCategory('외형복원·판금도색');
+const steamCases = await getPublishedCasesByCategory('스팀세차');
+const recentCases = (await getPublishedCases()).slice(0, 3);
+
+const serviceTiles = [
+  {
+    ...services[0],
+    image: glossCases[0] ? getHeroImagePath(glossCases[0].slug) : null,
+  },
+  {
+    ...services[1],
+    image: (glossCases[1] ?? glossCases[0]) ? getHeroImagePath((glossCases[1] ?? glossCases[0]).slug) : null,
+  },
+  {
+    ...services[2],
+    image: restorationCases[0] ? getHeroImagePath(restorationCases[0].slug) : null,
+  },
+  {
+    ...services[3],
+    image: steamCases[0] ? getHeroImagePath(steamCases[0].slug) : null,
+  },
+];
+
+const heroStyle = `background-image: linear-gradient(180deg, rgba(6,7,8,0.45) 0%, rgba(6,7,8,0.82) 78%), url('/images/hero-car.jpg');`;
+---
+
+<Layout title={title} description={description} path="/" schema={localBusinessSchema()}>
+  <section class="hero" style={heroStyle}>
+    <div class="wrap hero-center">
+      <div class="hero-logo-wrap">
+        <img src="/images/logo-kidari.png" alt="키다리광택" />
+      </div>
+      <img class="hero-logo-reflection" src="/images/logo-kidari.png" alt="" aria-hidden="true" />
+      <h1>
+        키다리광택은 강원도 춘천에서 광택을 전문으로 하는 디테일링샵으로,
+        유리막코팅·외형복원·스팀세차도 함께 진행합니다.
+      </h1>
+      <ul class="hero-facts">
+        <li>📍 {business.fullAddressText}</li>
+        <li>📞 {business.telephoneDisplay}</li>
+        <li>🕒 {business.openingHours[0].opens} ~ {business.openingHours[0].closes} · {business.closedNote}</li>
+      </ul>
+      <div class="cta-row">
+        <a class="btn btn-primary" href={business.telephoneHref}>전화 문의하기</a>
+        <a class="btn btn-outline" href="/contact">오시는 길 보기</a>
+        <a class="btn btn-outline" href="/steam-wash" data-open-price-modal>세차 요금표 보기</a>
+        <a class="btn btn-outline" href={business.naverBlogUrl} target="_blank" rel="noopener noreferrer">블로그 보기</a>
+        <a class="btn btn-outline" href={business.instagramUrl} target="_blank" rel="noopener noreferrer">인스타그램 보기</a>
+      </div>
+    </div>
+  </section>
+
+  <PriceModal />
+
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">WHY KIDARI</span>
+      <h2>키다리광택을 선택하는 이유</h2>
+      <p class="section-lead">
+        시공 전 상태와 진행한 작업을 있는 그대로 보여드리는 것을 원칙으로 합니다.
+      </p>
+      <div class="service-grid">
+        <article class="service-card">
+          <h3>15년 경력</h3>
+          <p>오랜 기간 축적한 광택·디테일링 노하우로 차량 상태에 맞는 공정을 선택해 시공합니다.</p>
+        </article>
+        <article class="service-card">
+          <h3>실제 시공사례 공개</h3>
+          <p>
+            <a href="/cases">시공사례 페이지</a>에서 실제로 진행한 작업을 차종·시공 전 상태·작업
+            내용·사진과 함께 그대로 공개합니다.
+          </p>
+        </article>
+        <article class="service-card">
+          <h3>정직한 안내</h3>
+          <p>불필요한 공정을 권하지 않고, 차량 상태를 확인한 뒤 필요한 시공만 정직하게 안내합니다.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-black">
+    <div class="wrap">
+      <span class="eyebrow">OUR SERVICES</span>
+      <h2>제공 서비스</h2>
+      <p class="section-lead">
+        키다리광택의 핵심 서비스는 광택이며, 유리막코팅·외형복원(판금도색)·스팀세차를 함께
+        진행해 도장 관리부터 손상 복원까지 한 곳에서 해결할 수 있습니다.
+      </p>
+      <div class="tile-grid">
+        {serviceTiles.map((service) => (
+          <a
+            class="tile-card"
+            href={service.href}
+            style={service.image ? `background-image: url('${service.image}');` : undefined}
+          >
+            <div class="tile-body">
+              <h3>{service.name}</h3>
+              <p>{service.oneLiner}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">RECENT WORK</span>
+      <h2>최근 시공사례</h2>
+      <p class="section-lead">
+        키다리광택이 실제로 진행한 작업을 시공 전 상태부터 작업 내용까지
+        <a href="/cases">시공사례 페이지</a>에서 확인하실 수 있습니다.
+      </p>
+      {recentCases.length > 0 && (
+        <div class="case-grid" style="margin-bottom: 24px;">
+          {recentCases.map((entry) => {
+            const heroImg = getHeroImagePath(entry.slug);
+            return (
+              <article class="case-card">
+                <span class="case-tag">{entry.data.category}</span>
+                <h3>{entry.data.title}</h3>
+                {entry.data.category !== '외형복원·판금도색' && (
+                  <p class="case-meta">{entry.data.vehicle}</p>
+                )}
+                <p class="summary">{entry.data.summary}</p>
+                {heroImg && <img class="hero-img" src={heroImg} alt={entry.data.title} loading="lazy" />}
+                <a class="more" href={`/cases/${entry.slug}`}>자세히 보기 →</a>
+              </article>
+            );
+          })}
+        </div>
+      )}
+      <a class="btn btn-outline-primary" href="/cases">시공사례 전체 보기</a>
+    </div>
+  </section>
+
+  <section class="cta-banner">
+    <div class="wrap">
+      <span class="eyebrow">APPOINTMENT</span>
+      <h2>차량 상태에 맞는 정확한 견적, 전화 상담으로 안내해 드립니다</h2>
+      <p>
+        {business.fullAddressText} · {business.openingHours[0].opens} ~ {business.openingHours[0].closes} ·
+        {business.closedNote}
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href={business.telephoneHref}>{business.telephoneDisplay} 전화하기</a>
+        <a class="btn btn-outline" href="/contact">오시는 길 보기</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="wrap">
+      <span class="eyebrow">FAQ</span>
+      <h2>자주 묻는 질문</h2>
+      <p class="section-lead">
+        광택·유리막코팅·외형복원·스팀세차·업체 선택 기준까지, 자주 받는 질문을 모아
+        <a href="/faq">FAQ 페이지</a>에서 카테고리별로 정리했습니다.
+      </p>
+      <a class="btn btn-outline-primary" href="/faq">FAQ 전체 보기</a>
+    </div>
+  </section>
+</Layout>

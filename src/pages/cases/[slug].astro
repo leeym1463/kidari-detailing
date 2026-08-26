@@ -1,0 +1,83 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { serviceCategoryHref } from '../../data/categories';
+import { blogPostingSchema, breadcrumbSchema } from '../../utils/schema';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('cases', ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { data } = entry;
+const { Content } = await render(entry);
+
+const title = `${data.title} | 시공사례 - 키다리광택 (춘천)`;
+const description = data.summary;
+const path = `/cases/${entry.slug}`;
+const serviceHref = serviceCategoryHref[data.category];
+
+const facts: { label: string; value: string }[] = [];
+if (data.category !== '외형복원·판금도색') facts.push({ label: '차종', value: data.vehicle });
+if (data.priceNote) facts.push({ label: '가격', value: data.priceNote });
+
+const schema = [
+  blogPostingSchema({ title: data.title, description: data.summary, path, datePublished: data.date }),
+  breadcrumbSchema([
+    { name: '홈', path: '/' },
+    { name: '시공사례', path: '/cases' },
+    { name: data.title, path },
+  ]),
+];
+---
+
+<Layout title={title} description={description} path={path} schema={schema}>
+  <section class="page-hero">
+    <div class="wrap">
+      <p class="breadcrumb">
+        <a href="/">홈</a> / <a href="/cases">시공사례</a> / {data.category}
+      </p>
+      <span class="case-tag">{data.category}</span>
+      <h1 style="margin-top:10px;">{data.title}</h1>
+      <p class="lede">{data.summary}</p>
+    </div>
+  </section>
+
+  <div class="wrap section">
+    {facts.length > 0 && (
+      <dl class="case-fact-grid">
+        {facts.map((fact) => (
+          <div class="fact">
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+
+    <div class="prose">
+      <h2>시공 전 상태</h2>
+      <p>{data.beforeCondition}</p>
+
+      <h2>진행한 작업</h2>
+      <ul>
+        {data.workPerformed.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+
+      <h2>상세 내용</h2>
+      <Content />
+    </div>
+
+    <p style="margin-top:24px;">
+      <a href={serviceHref}>{data.category} 서비스 안내 보기 →</a>
+      &nbsp;·&nbsp;
+      <a href="/cases">다른 시공사례 보기 →</a>
+    </p>
+  </div>
+</Layout>

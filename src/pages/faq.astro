@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro';
+import FaqList from '../components/FaqList.astro';
+import { faqs, faqCategoryOrder, faqsByCategory } from '../data/faq';
+import { serviceCategoryHref } from '../data/categories';
+import { faqPageSchema, breadcrumbSchema } from '../utils/schema';
+
+const title = '자주 묻는 질문 FAQ | 키다리광택 (춘천)';
+const description =
+  '키다리광택 자주 묻는 질문 모음. 광택, 유리막코팅, 외형복원·판금도색, 스팀세차, 업체 선택 기준까지 카테고리별로 정리했습니다.';
+
+const schema = [
+  faqPageSchema(faqs),
+  breadcrumbSchema([
+    { name: '홈', path: '/' },
+    { name: 'FAQ', path: '/faq' },
+  ]),
+];
+
+const categoryHref: Record<string, string> = { ...serviceCategoryHref, '업체선택': '' };
+---
+
+<Layout title={title} description={description} path="/faq" schema={schema}>
+  <section class="page-hero">
+    <div class="wrap">
+      <p class="breadcrumb"><a href="/">홈</a> / FAQ</p>
+      <h1>자주 묻는 질문</h1>
+      <p class="lede">
+        키다리광택에 자주 문의되는 질문을 광택, 유리막코팅, 외형복원·판금도색, 스팀세차,
+        업체 선택 기준 순서로 정리했습니다. 서비스별 더 자세한 안내는 각 서비스 페이지에서도
+        확인하실 수 있습니다.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap section prose" style="max-width: 100%;">
+    <div style="max-width: 72ch;">
+      {faqCategoryOrder.map((category) => (
+        <div>
+          <h2 class="faq-category-heading">
+            {category}
+            {categoryHref[category] && (
+              <a href={categoryHref[category]} style="font-size:0.75em; font-weight:600; margin-left:8px;">
+                서비스 페이지 보기 →
+              </a>
+            )}
+          </h2>
+          <FaqList items={faqsByCategory(category)} />
+        </div>
+      ))}
+    </div>
+  </div>
+</Layout>
