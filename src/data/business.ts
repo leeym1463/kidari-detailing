@@ -9,7 +9,7 @@ export const business = {
     '강원도 춘천에서 광택을 전문으로 하는 자동차 디테일링샵. 유리막코팅·외형복원(판금도색)·스팀세차 서비스를 함께 제공합니다.',
 
   // astro.config.mjs의 SITE_URL과 동일한 값
-  url: 'https://www.kidari-gwangtaek.com',
+  url: 'https://www.kidari-detailing.com',
 
   telephoneDisplay: '010-2666-5742',
   telephoneHref: 'tel:010-2666-5742',
