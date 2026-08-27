@@ -169,7 +169,6 @@ import { business } from '../data/business';
 </style>
 
 <script>
-  const SEEN_KEY = 'kidari-price-modal-seen';
   const dialog = document.getElementById('price-modal') as HTMLDialogElement | null;
 
   function openModal() {
@@ -188,14 +187,6 @@ import { business } from '../data/business';
     dialog.addEventListener('click', (e) => {
       if (e.target === dialog) closeModal();
     });
-
-    dialog.addEventListener('close', () => {
-      sessionStorage.setItem(SEEN_KEY, '1');
-    });
-
-    if (!sessionStorage.getItem(SEEN_KEY)) {
-      openModal();
-    }
   }
 
   document.querySelectorAll('[data-open-price-modal]').forEach((el) => {
