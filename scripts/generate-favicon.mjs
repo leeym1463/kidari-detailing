@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 
 const SRC = 'public/images/logo-kidari.png';
-const BG = '#0d0d0f';
+const BG = '#000000';
 
 async function run() {
   // 1) Extract the region containing just the cyan brace mark (left side of the logo).
@@ -74,13 +74,13 @@ async function run() {
     return canvas.png();
   }
 
-  const icon512 = await (await buildIcon(512, { rounded: true })).toBuffer();
+  const icon512 = await (await buildIcon(512, { rounded: false })).toBuffer();
   await sharp(icon512).toFile('public/images/logo-icon-512.png');
 
-  const icon192 = await (await buildIcon(192, { rounded: true })).toBuffer();
+  const icon192 = await (await buildIcon(192, { rounded: false })).toBuffer();
   await sharp(icon192).toFile('public/favicon-192.png');
 
-  const icon32 = await (await buildIcon(32, { rounded: true })).toBuffer();
+  const icon32 = await (await buildIcon(32, { rounded: false })).toBuffer();
   await sharp(icon32).toFile('public/favicon-32.png');
 
   // Apple touch icon: no transparency, iOS applies its own corner rounding.
