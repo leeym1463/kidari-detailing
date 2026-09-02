@@ -4,8 +4,8 @@ const SRC = 'public/images/logo-kidari.png';
 const BG = '#000000';
 
 async function run() {
-  // 1) Extract the region containing just the cyan brace mark (left side of the logo).
-  const region = { left: 0, top: 0, width: 320, height: 330 };
+  // 1) Extract the region containing the cyan brace mark + the "K" of KIDARI.
+  const region = { left: 0, top: 0, width: 300, height: 330 };
   const { data, info } = await sharp(SRC)
     .extract(region)
     .raw()
@@ -14,27 +14,32 @@ async function run() {
 
   const { width, height, channels } = info;
 
-  // 2) Keep only the cyan pixels, drop the white "K" outline and everything else.
+  // 2) Keep the cyan brace and the white "K" as-is; just clear stray low-alpha noise.
   for (let i = 0; i < data.length; i += channels) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
     const a = data[i + 3];
-    const isCyan = a > 100 && b > 150 && g > 150 && r < 100;
-    if (!isCyan) {
+    if (a < 40) {
       data[i + 3] = 0;
     } else {
-      // normalize to the exact brand accent color
-      data[i] = 0x00;
-      data[i + 1] = 0xc5;
-      data[i + 2] = 0xe5;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const isCyan = b > 150 && g > 150 && r < 100;
+      if (isCyan) {
+        data[i] = 0x00;
+        data[i + 1] = 0xc5;
+        data[i + 2] = 0xe5;
+      } else {
+        data[i] = 0xff;
+        data[i + 1] = 0xff;
+        data[i + 2] = 0xff;
+      }
       data[i + 3] = 255;
     }
   }
 
   const masked = sharp(data, { raw: { width, height, channels } }).png();
 
-  // 3) Trim to the tight bounding box of the cyan mark.
+  // 3) Trim to the tight bounding box of the mark.
   const trimmedBuffer = await masked.trim({ threshold: 10 }).toBuffer();
   const trimmedMeta = await sharp(trimmedBuffer).metadata();
 
