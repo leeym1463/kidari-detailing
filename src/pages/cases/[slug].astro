@@ -3,6 +3,7 @@ import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import { serviceCategoryHref } from '../../data/categories';
 import { blogPostingSchema, breadcrumbSchema } from '../../utils/schema';
+import BeforeAfterSlider from '../../components/BeforeAfterSlider.astro';
 
 export async function getStaticPaths() {
   const entries = await getCollection('cases', ({ data }) => !data.draft);
@@ -57,6 +58,15 @@ const schema = [
           </div>
         ))}
       </dl>
+    )}
+
+    {data.beforeAfter && data.beforeAfter.length > 0 && (
+      <div class="prose">
+        <h2>시공 전후 비교</h2>
+        {data.beforeAfter.map((pair) => (
+          <BeforeAfterSlider before={pair.before} after={pair.after} caption={pair.caption} />
+        ))}
+      </div>
     )}
 
     <div class="prose">

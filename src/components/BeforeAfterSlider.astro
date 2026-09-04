@@ -1,0 +1,175 @@
+---
+interface Props {
+  before: string;
+  after: string;
+  beforeAlt?: string;
+  afterAlt?: string;
+  caption?: string;
+}
+
+const { before, after, beforeAlt = '시공 전', afterAlt = '시공 후', caption } = Astro.props;
+---
+
+<figure class="ba-slider">
+  <div class="ba-frame">
+    <img class="ba-img ba-after" src={after} alt={afterAlt} loading="lazy" />
+    <div class="ba-before-wrap">
+      <img class="ba-img ba-before" src={before} alt={beforeAlt} loading="lazy" />
+    </div>
+    <span class="ba-tag ba-tag-before">BEFORE</span>
+    <span class="ba-tag ba-tag-after">AFTER</span>
+    <div class="ba-handle" aria-hidden="true">
+      <span class="ba-handle-grip">↔</span>
+    </div>
+    <input
+      class="ba-range"
+      type="range"
+      min="0"
+      max="100"
+      value="50"
+      aria-label="시공 전/후 비교 슬라이더"
+    />
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .ba-slider {
+    margin: 0 0 24px;
+  }
+
+  .ba-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--color-bg-alt);
+    touch-action: pan-y;
+  }
+
+  .ba-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .ba-before-wrap {
+    position: absolute;
+    inset: 0;
+    width: 50%;
+    overflow: hidden;
+  }
+
+  .ba-before-wrap .ba-img {
+    width: var(--ba-frame-width, 100%);
+    max-width: none;
+  }
+
+  .ba-tag {
+    position: absolute;
+    top: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: rgba(13, 13, 15, 0.75);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .ba-tag-before {
+    left: 12px;
+  }
+
+  .ba-tag-after {
+    right: 12px;
+  }
+
+  .ba-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    border-left: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 3;
+    transform: translateX(-1px);
+  }
+
+  .ba-handle-grip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .ba-range {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+    z-index: 4;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  figcaption {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+</style>
+
+<script>
+  function initBeforeAfterSliders() {
+    document.querySelectorAll<HTMLElement>('.ba-slider').forEach((slider) => {
+      if (slider.dataset.baInit === '1') return;
+      slider.dataset.baInit = '1';
+
+      const frame = slider.querySelector<HTMLElement>('.ba-frame');
+      const beforeWrap = slider.querySelector<HTMLElement>('.ba-before-wrap');
+      const handle = slider.querySelector<HTMLElement>('.ba-handle');
+      const range = slider.querySelector<HTMLInputElement>('.ba-range');
+      if (!frame || !beforeWrap || !handle || !range) return;
+
+      function update(value: number) {
+        beforeWrap!.style.width = value + '%';
+        handle!.style.left = value + '%';
+        const frameWidth = frame!.getBoundingClientRect().width;
+        beforeWrap!.style.setProperty('--ba-frame-width', frameWidth + 'px');
+      }
+
+      update(50);
+      range.addEventListener('input', () => update(Number(range.value)));
+
+      const ro = new ResizeObserver(() => update(Number(range.value)));
+      ro.observe(frame);
+    });
+  }
+
+  initBeforeAfterSliders();
+</script>

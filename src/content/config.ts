@@ -12,6 +12,16 @@ const cases = defineCollection({
     workPerformed: z.array(z.string()), // 진행한 작업 목록
     duration: z.string(), // 소요 시간 (예: 당일 4시간)
     priceNote: z.string().optional(), // 실제 청구 가격 안내(선택)
+    // 같은 부위를 찍은 시공 전/후 사진 쌍(선택). 드래그 비교 슬라이더로 표시됩니다.
+    beforeAfter: z
+      .array(
+        z.object({
+          before: z.string(),
+          after: z.string(),
+          caption: z.string().optional(),
+        })
+      )
+      .optional(),
     // 초안 상태 글은 목록/상세/사이트맵에서 제외됩니다.
     draft: z.boolean().default(false),
   }),
