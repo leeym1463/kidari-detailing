@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 // sitemap.xml, robots.txt, canonical URL, JSON-LD의 url 값이 모두 이 값을 기준으로 생성됩니다.
-const SITE_URL = 'https://www.kidari-detailing.com';
+const SITE_URL = 'https://kidari-detailing.com';
 
 export default defineConfig({
   site: SITE_URL,
