@@ -972,17 +972,6 @@ h1, h2, h3, h4 {
   line-height: 1.75;
 }
 
-.erp-years-meta {
-  margin-top: 12px !important;
-  padding-top: 12px;
-  border-top: 1px solid var(--erp-line);
-  font-size: 0.88rem !important;
-}
-
-.erp-years-meta strong {
-  color: var(--color-accent);
-}
-
 @media (max-width: 700px) {
   .erp-years {
     flex-direction: column;
