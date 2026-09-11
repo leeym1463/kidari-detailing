@@ -50,3 +50,9 @@ draft: false
 ![그랜저 유리막코팅 실내 건조 마무리 모습](/images/cases/gwangtaek-06-2025-12-10-grandeur/img-10.jpg)
 
 후면부 모습입니다. 유리막코팅 시공 후 실내에서 22도 온풍기 건조로 마무리하는 과정 중 한 컷 찍어보았습니다. 앞으로도 정성, 정직, 정품, 열정으로 시공하는 춘천 최고의 광택 전문점이 되도록 노력하겠습니다.
+
+### 입고 · 출고 외관
+
+![입고 당시 그랜저 외관](/images/cases/gwangtaek-06-2025-12-10-grandeur/img-11.jpg)
+
+![시공을 마친 그랜저 외관](/images/cases/gwangtaek-06-2025-12-10-grandeur/img-12.jpg)
