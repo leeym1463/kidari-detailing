@@ -61,8 +61,10 @@ for (const [slug, files] of Object.entries(plan)) {
   }
 
   const caseDir = `public/images/cases/${slug}`;
+  // 확장자가 .JPG(대문자)인 파일도 있으므로 대소문자를 구분하지 않고 번호를 읽습니다.
+  // (윈도우는 대소문자를 구분하지 않아 번호가 겹치면 기존 사진을 덮어씁니다)
   const nums = readdirSync(caseDir)
-    .map((f) => Number((f.match(/img-(\d+)\.jpg/) || [])[1]))
+    .map((f) => Number((f.match(/img-(\d+)\.jpe?g/i) || [])[1]))
     .filter((n) => !Number.isNaN(n));
   let next = Math.max(0, ...nums) + 1;
 

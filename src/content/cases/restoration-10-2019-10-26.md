@@ -55,4 +55,4 @@ draft: false
 
 ### 시공 완료 후 외관
 
-![외형복원을 마친 차량 도어 부위](/images/cases/restoration-10-2019-10-26/img-09.jpg)
+![외형복원을 마친 차량 도어 부위](/images/cases/restoration-10-2019-10-26/img-11.jpg)
