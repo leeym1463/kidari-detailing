@@ -684,3 +684,126 @@ img {
     padding: 20px 18px;
   }
 }
+
+/* ---------------------------------------------------------------
+   사진함
+   --------------------------------------------------------------- */
+
+.ad-upload {
+  border: 2px dashed var(--ad-line-strong);
+  border-radius: var(--ad-radius);
+  background: var(--ad-surface);
+  padding: 28px 20px;
+  text-align: center;
+}
+.ad-upload.is-over {
+  border-color: var(--ad-blue);
+  background: var(--ad-blue-soft);
+}
+.ad-upload p {
+  margin: 12px 0 0;
+  color: var(--ad-muted);
+  font-size: 0.9rem;
+}
+.ad-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.ad-progress {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  text-align: left;
+  font-size: 0.88rem;
+}
+.ad-progress li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-top: 1px solid var(--ad-line);
+  color: var(--ad-muted);
+}
+.ad-progress li:first-child {
+  border-top: 0;
+}
+.ad-progress .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ad-text);
+}
+.ad-progress .state-ok {
+  color: var(--ad-ok);
+  font-weight: 700;
+}
+.ad-progress .state-ng {
+  color: var(--ad-danger);
+  font-weight: 700;
+}
+
+.ad-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+.ad-photo-card {
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-radius-sm);
+  background: var(--ad-surface);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ad-photo-card.is-picked {
+  border-color: var(--ad-blue);
+  box-shadow: 0 0 0 2px var(--ad-blue-soft);
+}
+.ad-photo-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #eef1f5;
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.ad-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ad-photo-body {
+  padding: 10px 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.ad-photo-meta {
+  font-size: 0.78rem;
+  color: var(--ad-muted);
+  line-height: 1.45;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ad-photo-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .ad-photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+}

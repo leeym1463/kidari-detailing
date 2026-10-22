@@ -1,0 +1,86 @@
+---
+// /admin/photos — 사진함.
+// 글을 쓰기 전에 휴대폰으로 찍은 작업사진을 미리 올려두는 임시 공간입니다.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="사진함" nav="photos">
+  <div class="ad-page-head">
+    <h1>사진함</h1>
+    <p>글을 쓰기 전에 사진을 먼저 올려두세요. 휴대폰에서 여러 장을 한 번에 올릴 수 있습니다.</p>
+  </div>
+
+  <div class="ad-card">
+    <div class="ad-upload" id="drop-zone">
+      <label class="ad-btn ad-btn-primary" for="photo-input" aria-label="사진 추가">
+        사진 추가
+      </label>
+      <input
+        id="photo-input"
+        type="file"
+        accept="image/*"
+        multiple
+        aria-label="올릴 사진 선택"
+      />
+      <p>
+        휴대폰에서는 눌러서 앨범이나 카메라를 열 수 있습니다.<br />
+        컴퓨터에서는 사진을 이 영역에 끌어다 놓아도 됩니다.
+      </p>
+      <ul class="ad-progress" id="upload-progress" aria-live="polite"></ul>
+    </div>
+
+    <p class="ad-notice ad-notice-info" style="margin:16px 0 0;">
+      올린 사진은 긴 변 1600px 로 자동으로 줄여 저장합니다. 원본은 보관하지 않습니다.
+    </p>
+  </div>
+
+  <div class="ad-card">
+    <h2>올려둔 사진</h2>
+    <p class="ad-small ad-muted" style="margin:0 0 16px;">
+      사진함의 사용하지 않은 사진은 7일 후 자동으로 정리됩니다. 글에 넣은 사진은 정리되지
+      않습니다.
+    </p>
+
+    <div class="ad-photo-grid" id="photo-grid"></div>
+
+    <div class="ad-empty ad-hide" id="photo-empty">
+      <p>아직 올린 사진이 없습니다.</p>
+      <label class="ad-btn ad-btn-primary" for="photo-input" aria-label="첫 사진 추가하기">
+        첫 사진 추가하기
+      </label>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import { bootAdmin } from '../../lib/admin-guard';
+  import { createUploader, PhotoGallery } from '../../lib/photo-gallery';
+  import { el, friendlyError, maybe, notice } from '../../lib/admin-ui';
+
+  (async () => {
+    const session = await bootAdmin();
+    if (!session) return;
+    const { api } = session;
+
+    const gallery = new PhotoGallery({
+      grid: el('photo-grid'),
+      empty: maybe('photo-empty'),
+      api,
+      deletable: true,
+    });
+
+    createUploader({
+      api,
+      input: el<HTMLInputElement>('photo-input'),
+      progress: maybe('upload-progress'),
+      dropZone: maybe('drop-zone'),
+      onDone: () => gallery.refresh(),
+    });
+
+    try {
+      await gallery.refresh();
+    } catch (e) {
+      notice(maybe('ad-mode-banner'), friendlyError(e), 'error');
+    }
+  })();
+</script>
