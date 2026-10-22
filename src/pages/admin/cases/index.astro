@@ -1,0 +1,174 @@
+---
+// /admin/cases — 새 CMS 로 만든 시공사례 목록.
+// 기존 Markdown 38건은 여기 나오지 않습니다(공개 사이트에서 그대로 유지됩니다).
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="시공사례" nav="cases">
+  <div class="ad-page-head">
+    <h1>시공사례</h1>
+    <p>작성한 글을 확인하고 이어서 수정할 수 있습니다.</p>
+  </div>
+
+  <div class="ad-btn-row" style="margin-bottom:18px;">
+    <a class="ad-btn ad-btn-primary" href="/admin/cases/new" aria-label="새 시공사례 작성">
+      새 시공사례 작성
+    </a>
+  </div>
+
+  <div class="ad-card">
+    <div class="ad-filter-row" role="group" aria-label="상태로 거르기">
+      <button type="button" data-filter="all" aria-pressed="true" aria-label="전체 보기">전체</button>
+      <button type="button" data-filter="draft" aria-pressed="false" aria-label="임시저장만 보기">
+        임시저장
+      </button>
+      <button type="button" data-filter="published" aria-pressed="false" aria-label="게시된 글만 보기">
+        게시됨
+      </button>
+    </div>
+
+    <ul class="ad-case-list" id="case-list"></ul>
+
+    <div class="ad-empty ad-hide" id="case-empty">
+      <p id="case-empty-text">아직 작성한 글이 없습니다.</p>
+      <a class="ad-btn ad-btn-primary" href="/admin/cases/new" aria-label="첫 시공사례 작성하기">
+        첫 시공사례 작성하기
+      </a>
+    </div>
+  </div>
+
+  <p class="ad-small ad-muted" style="margin-top:18px;">
+    공개 홈페이지에 이미 올라가 있는 기존 시공사례는 여기에 표시되지 않습니다. 그대로 유지됩니다.
+  </p>
+</AdminLayout>
+
+<script>
+  import { bootAdmin } from '../../../lib/admin-guard';
+  import type { CaseRow } from '../../../lib/cms-types';
+  import {
+    el,
+    escapeHtml,
+    formatDate,
+    friendlyError,
+    maybe,
+    notice,
+    show,
+    toast,
+  } from '../../../lib/admin-ui';
+
+  (async () => {
+    const session = await bootAdmin();
+    if (!session) return;
+    const { api } = session;
+
+    const list = el('case-list');
+    const empty = el('case-empty');
+    const emptyText = el('case-empty-text');
+
+    let rows: CaseRow[] = [];
+    let covers = new Map<string, string>();
+    let filter: 'all' | 'draft' | 'published' = 'all';
+
+    function visible(): CaseRow[] {
+      return filter === 'all' ? rows : rows.filter((r) => r.status === filter);
+    }
+
+    function render() {
+      const items = visible();
+      if (items.length === 0) {
+        list.innerHTML = '';
+        emptyText.textContent =
+          rows.length === 0
+            ? '아직 작성한 글이 없습니다.'
+            : filter === 'draft'
+              ? '작성 중인 글이 없습니다.'
+              : '게시된 글이 없습니다.';
+        show(empty, true);
+        return;
+      }
+      show(empty, false);
+
+      list.innerHTML = items
+        .map((c) => {
+          const url = c.cover_image ? covers.get(c.cover_image) : undefined;
+          const cover = url
+            ? `<img src="${escapeHtml(url)}" alt="" loading="lazy" decoding="async" />`
+            : '사진 없음';
+          const badge =
+            c.status === 'published'
+              ? '<span class="ad-badge ad-badge-pub">게시됨</span>'
+              : '<span class="ad-badge ad-badge-draft">임시저장</span>';
+          const meta = [c.category, c.vehicle, formatDate(c.case_date)]
+            .filter(Boolean)
+            .map((v) => escapeHtml(String(v)))
+            .join(' · ');
+          const editHref = `/admin/cases/edit?id=${encodeURIComponent(c.id)}`;
+
+          return `<li class="ad-case-item" data-id="${escapeHtml(c.id)}">
+  <span class="ad-case-cover">${cover}</span>
+  <div class="ad-case-main">
+    ${badge}
+    <a class="ad-case-title" href="${editHref}">${escapeHtml(c.title || '제목 없음')}</a>
+    <p class="ad-case-meta">${meta}<br />최근 저장 ${formatDate(c.updated_at)}</p>
+    <span class="ad-case-actions">
+      <a class="ad-btn ad-btn-sm" href="${editHref}" aria-label="${escapeHtml(c.title)} 수정">수정</a>
+      <a class="ad-btn ad-btn-sm" href="/admin/cases/preview?id=${encodeURIComponent(c.id)}" aria-label="${escapeHtml(c.title)} 미리보기">미리보기</a>
+      ${
+        c.status === 'draft'
+          ? `<button type="button" class="ad-btn ad-btn-sm ad-btn-danger" data-act="delete" aria-label="${escapeHtml(c.title)} 삭제">삭제</button>`
+          : ''
+      }
+    </span>
+  </div>
+</li>`;
+        })
+        .join('');
+    }
+
+    async function load() {
+      try {
+        rows = await api.listCases();
+        const paths = rows.map((r) => r.cover_image).filter((p): p is string => Boolean(p));
+        covers = paths.length > 0 ? await api.signedUrls(paths) : new Map();
+        render();
+      } catch (e) {
+        notice(maybe('ad-mode-banner'), friendlyError(e), 'error');
+      }
+    }
+
+    // 상태 거르기
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-filter]')) {
+      button.addEventListener('click', () => {
+        filter = button.dataset.filter as typeof filter;
+        for (const b of document.querySelectorAll<HTMLButtonElement>('[data-filter]')) {
+          b.setAttribute('aria-pressed', String(b === button));
+        }
+        render();
+      });
+    }
+
+    // 임시저장 글 삭제 — 게시된 글은 버튼 자체를 만들지 않습니다.
+    list.addEventListener('click', async (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+        'button[data-act="delete"]'
+      );
+      if (!button) return;
+      const id = button.closest<HTMLElement>('.ad-case-item')?.dataset.id;
+      const row = rows.find((r) => r.id === id);
+      if (!row) return;
+
+      if (!confirm(`"${row.title || '제목 없음'}" 글을 삭제할까요?\n삭제하면 되돌릴 수 없습니다.`)) {
+        return;
+      }
+      try {
+        await api.deleteCase(row.id);
+        toast('글을 삭제했습니다.', 'ok');
+        await load();
+      } catch (e) {
+        toast(friendlyError(e), 'error');
+      }
+    });
+
+    await load();
+  })();
+</script>

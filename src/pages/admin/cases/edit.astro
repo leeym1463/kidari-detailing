@@ -1,0 +1,448 @@
+---
+// /admin/cases/edit?id=<uuid> — 기본정보 + 본문 블록 편집 + 사진함.
+//
+// 정적 페이지 하나로 모든 글을 편집합니다. 어떤 글인지는 주소의 ?id= 로 정하므로
+// 서버 렌더링(SSR) 경로를 만들지 않아도 됩니다.
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { CASE_CATEGORIES } from '../../../lib/cms-types';
+---
+
+<AdminLayout title="시공사례 작성" nav="cases">
+  <!-- 저장 상태와 주요 동작 -->
+  <div class="ad-editor-bar">
+    <div class="inner">
+      <span class="title" id="bar-title">불러오는 중…</span>
+      <span class="ad-save-state" id="save-state" role="status" aria-live="polite"></span>
+      <button type="button" id="btn-save" class="ad-btn ad-btn-primary ad-btn-sm" aria-label="임시저장">
+        임시저장
+      </button>
+      <a id="btn-preview" class="ad-btn ad-btn-sm" href="#" aria-label="미리보기">미리보기</a>
+      <a class="ad-btn ad-btn-sm" href="/admin/cases" aria-label="목록으로 돌아가기">목록</a>
+    </div>
+  </div>
+
+  <p id="edit-error" class="ad-notice ad-hide" role="alert"></p>
+
+  <div class="ad-editor-grid with-panel" id="editor-grid">
+    <div>
+      <!-- ============ 기본정보 ============ -->
+      <details class="ad-section" id="basic-section" open>
+        <summary aria-label="기본정보 펼치기 또는 접기">기본정보</summary>
+        <div class="body">
+          <div class="ad-field">
+            <label for="f-title" class="ad-req">시공사례 제목</label>
+            <input id="f-title" class="ad-input" type="text" maxlength="120" aria-label="시공사례 제목" />
+          </div>
+
+          <div class="ad-field">
+            <label for="f-category" class="ad-req">카테고리</label>
+            <select id="f-category" class="ad-select" aria-label="카테고리">
+              {CASE_CATEGORIES.map((c) => <option value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div class="ad-field">
+            <label for="f-vehicle" class="ad-req">차량명</label>
+            <input id="f-vehicle" class="ad-input" type="text" maxlength="80" aria-label="차량명" />
+          </div>
+
+          <div class="ad-field">
+            <label for="f-date" class="ad-req">작업일</label>
+            <input id="f-date" class="ad-input" type="date" aria-label="작업일" />
+          </div>
+
+          <div class="ad-field">
+            <label for="f-color">차량 색상</label>
+            <input id="f-color" class="ad-input" type="text" maxlength="40" aria-label="차량 색상"
+              placeholder="예) 알파인 화이트" />
+          </div>
+
+          <div class="ad-field">
+            <label for="f-summary">요약</label>
+            <textarea id="f-summary" class="ad-textarea" maxlength="300" aria-label="요약"
+              placeholder="목록과 검색결과에 보이는 한두 문장입니다."></textarea>
+          </div>
+
+          <div class="ad-field">
+            <label for="f-before">입고상태</label>
+            <textarea id="f-before" class="ad-textarea" aria-label="입고상태"
+              placeholder="차를 받았을 때 상태를 적어주세요."></textarea>
+          </div>
+
+          <div class="ad-field">
+            <label for="f-work">작업내용</label>
+            <textarea id="f-work" class="ad-textarea" aria-label="작업내용"
+              placeholder="한 줄에 하나씩 적어주세요.&#10;예)&#10;1단계 컴파운드 광택&#10;유리막코팅 2회 도포"></textarea>
+            <p class="ad-hint">한 줄에 하나씩 적으면 공개 페이지에서 목록으로 보입니다.</p>
+          </div>
+
+          <div class="ad-field">
+            <label for="f-duration">작업시간</label>
+            <input id="f-duration" class="ad-input" type="text" maxlength="60" aria-label="작업시간"
+              placeholder="예) 당일 4시간" />
+          </div>
+
+          <div class="ad-field">
+            <label for="f-price">가격 안내</label>
+            <input id="f-price" class="ad-input" type="text" maxlength="120" aria-label="가격 안내"
+              placeholder="예) 55만원 (차종·상태에 따라 달라집니다)" />
+          </div>
+
+          <div class="ad-field" style="margin-bottom:0;">
+            <label for="f-blog">네이버 블로그 URL</label>
+            <input id="f-blog" class="ad-input" type="url" inputmode="url" aria-label="네이버 블로그 URL"
+              placeholder="https://blog.naver.com/..." />
+            <p class="ad-hint">블로그 글을 옮겨 적었다면 원본 주소를 남겨두세요.</p>
+          </div>
+        </div>
+      </details>
+
+      <!-- ============ 본문 ============ -->
+      <div class="ad-card" style="margin-top:18px;">
+        <h2>본문</h2>
+        <p class="ad-small ad-muted" style="margin:0 0 16px;">
+          블록을 추가해 글과 사진을 순서대로 배치합니다. 각 블록은 위아래로 옮길 수 있습니다.
+        </p>
+        <div id="block-editor"></div>
+      </div>
+    </div>
+
+    <!-- ============ 사진함 패널 ============ -->
+    <aside class="ad-panel ad-hide" id="photo-panel" aria-label="사진함">
+      <div class="ad-panel-head">
+        <h2 id="panel-title">사진함</h2>
+        <button type="button" id="panel-close" class="ad-btn ad-btn-sm" style="margin-left:auto;"
+          aria-label="사진함 닫기">닫기</button>
+      </div>
+
+      <div class="ad-panel-body">
+        <p class="ad-panel-hint" id="panel-hint">
+          글에 넣을 사진을 미리 올려두세요.
+        </p>
+
+        <label class="ad-btn ad-btn-sm ad-btn-block" for="panel-upload" aria-label="사진 추가">
+          사진 추가
+        </label>
+        <input id="panel-upload" type="file" accept="image/*" multiple aria-label="올릴 사진 선택"
+          style="position:absolute;width:1px;height:1px;opacity:0;" />
+        <ul class="ad-progress" id="panel-progress" aria-live="polite"></ul>
+
+        <div class="ad-photo-grid" id="panel-grid" style="margin-top:14px;"></div>
+        <div class="ad-empty ad-hide" id="panel-empty">
+          <p>사진함이 비어 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="ad-panel-foot ad-hide" id="panel-foot">
+        <button type="button" id="panel-confirm" class="ad-btn ad-btn-primary ad-btn-sm" aria-label="고른 사진 넣기">
+          선택한 사진 넣기
+        </button>
+        <button type="button" id="panel-cancel" class="ad-btn ad-btn-sm" aria-label="사진 고르기 취소">
+          취소
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="ad-btn-row" style="margin-top:20px;">
+    <button type="button" id="btn-open-panel" class="ad-btn" aria-label="사진함 열기">사진함 열기</button>
+  </div>
+</AdminLayout>
+
+<script>
+  import { bootAdmin } from '../../../lib/admin-guard';
+  import { BlockEditor } from '../../../lib/block-editor';
+  import { createUploader, PhotoGallery } from '../../../lib/photo-gallery';
+  import {
+    CASE_CATEGORIES,
+    firstPhotoPath,
+    usedPhotoPaths,
+    type CaseCategory,
+    type CaseRow,
+  } from '../../../lib/cms-types';
+  import {
+    debounce,
+    el,
+    friendlyError,
+    maybe,
+    notice,
+    show,
+    toast,
+    todayISO,
+  } from '../../../lib/admin-ui';
+
+  const AUTOSAVE_MS = 1500;
+
+  (async () => {
+    const session = await bootAdmin();
+    if (!session) return;
+    const { api } = session;
+
+    const caseId = new URLSearchParams(location.search).get('id');
+    if (!caseId) {
+      notice(maybe('edit-error'), '어떤 글인지 알 수 없습니다. 목록에서 다시 들어와주세요.', 'error');
+      return;
+    }
+
+    let row: CaseRow | null = null;
+    try {
+      row = await api.getCase(caseId);
+    } catch (e) {
+      notice(maybe('edit-error'), friendlyError(e), 'error');
+      return;
+    }
+    if (!row) {
+      notice(maybe('edit-error'), '글을 찾을 수 없습니다. 목록에서 다시 들어와주세요.', 'error');
+      return;
+    }
+
+    el('bar-title').textContent = row.title || '제목 없음';
+    el<HTMLAnchorElement>('btn-preview').href =
+      `/admin/cases/preview?id=${encodeURIComponent(caseId)}`;
+
+    // ----------------------------------------------------------------
+    // 기본정보 채우기
+    // ----------------------------------------------------------------
+    const F = {
+      title: el<HTMLInputElement>('f-title'),
+      category: el<HTMLSelectElement>('f-category'),
+      vehicle: el<HTMLInputElement>('f-vehicle'),
+      date: el<HTMLInputElement>('f-date'),
+      color: el<HTMLInputElement>('f-color'),
+      summary: el<HTMLTextAreaElement>('f-summary'),
+      before: el<HTMLTextAreaElement>('f-before'),
+      work: el<HTMLTextAreaElement>('f-work'),
+      duration: el<HTMLInputElement>('f-duration'),
+      price: el<HTMLInputElement>('f-price'),
+      blog: el<HTMLInputElement>('f-blog'),
+    };
+
+    F.title.value = row.title ?? '';
+    F.category.value = CASE_CATEGORIES.includes(row.category) ? row.category : CASE_CATEGORIES[0];
+    F.vehicle.value = row.vehicle ?? '';
+    F.date.value = row.case_date ?? todayISO();
+    F.color.value = row.vehicle_color ?? '';
+    F.summary.value = row.summary ?? '';
+    F.before.value = row.before_condition ?? '';
+    F.work.value = (row.work_performed ?? []).join('\n');
+    F.duration.value = row.duration ?? '';
+    F.price.value = row.price_note ?? '';
+    F.blog.value = row.naver_blog_url ?? '';
+
+    // ----------------------------------------------------------------
+    // 사진함 패널
+    // ----------------------------------------------------------------
+    const panel = el('photo-panel');
+    const panelFoot = el('panel-foot');
+    let pickResolve: ((paths: string[]) => void) | null = null;
+
+    const gallery = new PhotoGallery({
+      grid: el('panel-grid'),
+      empty: maybe('panel-empty'),
+      api,
+      selectable: true,
+      multiple: true,
+      deletable: false,
+      onSelectionChange: () => updateConfirmLabel(),
+    });
+
+    let pickLimit: 'one' | 'many' = 'many';
+
+    function updateConfirmLabel() {
+      const n = gallery.selected.length;
+      el('panel-confirm').textContent = n > 0 ? `선택한 사진 ${n}장 넣기` : '선택한 사진 넣기';
+    }
+
+    function openPanel(mode: 'browse' | 'pick', title: string, hint: string) {
+      el('panel-title').textContent = title;
+      el('panel-hint').textContent = hint;
+      show(panelFoot, mode === 'pick');
+      show(panel, true);
+      panel.classList.remove('ad-hide');
+    }
+
+    function closePanel() {
+      // 고르는 도중에 닫으면 취소로 처리합니다.
+      if (pickResolve) {
+        const done = pickResolve;
+        pickResolve = null;
+        done([]);
+      }
+      gallery.clearSelection();
+      show(panelFoot, false);
+      // 넓은 화면에서는 사진함을 계속 띄워둡니다.
+      if (window.matchMedia('(min-width: 1024px)').matches) {
+        openPanelBrowse();
+      } else {
+        show(panel, false);
+      }
+    }
+
+    function openPanelBrowse() {
+      openPanel('browse', '사진함', '글에 넣을 사진을 미리 올려두세요.');
+    }
+
+    el('panel-close').addEventListener('click', () => {
+      if (pickResolve) {
+        closePanel();
+      } else {
+        show(panel, false);
+      }
+    });
+    el('btn-open-panel').addEventListener('click', () => openPanelBrowse());
+    el('panel-cancel').addEventListener('click', () => closePanel());
+
+    el('panel-confirm').addEventListener('click', () => {
+      if (!pickResolve) return;
+      let picked = gallery.selected.map((p) => p.storage_path);
+      if (picked.length === 0) {
+        toast('사진을 먼저 고르세요.', 'error');
+        return;
+      }
+      if (pickLimit === 'one') picked = picked.slice(0, 1);
+      const done = pickResolve;
+      pickResolve = null;
+      gallery.clearSelection();
+      show(panelFoot, false);
+      if (!window.matchMedia('(min-width: 1024px)').matches) show(panel, false);
+      done(picked);
+    });
+
+    createUploader({
+      api,
+      input: el<HTMLInputElement>('panel-upload'),
+      progress: maybe('panel-progress'),
+      onDone: async () => {
+        await gallery.refresh();
+        editor.refreshThumbs();
+      },
+    });
+
+    // ----------------------------------------------------------------
+    // 블록 편집기
+    // ----------------------------------------------------------------
+    const editor = new BlockEditor(el('block-editor'), {
+      thumbUrl: (path) => gallery.thumbUrl(path),
+      pickPhotos: ({ multiple, title }) =>
+        new Promise<string[]>((resolve) => {
+          pickResolve = resolve;
+          pickLimit = multiple ? 'many' : 'one';
+          gallery.clearSelection();
+          updateConfirmLabel();
+          openPanel(
+            'pick',
+            title,
+            multiple
+              ? '넣을 사진을 차례대로 누르세요. 누른 순서대로 들어갑니다.'
+              : '넣을 사진 한 장을 누르세요.'
+          );
+        }),
+      onChange: () => scheduleSave(),
+    });
+
+    // ----------------------------------------------------------------
+    // 저장
+    // ----------------------------------------------------------------
+    const stateNode = el('save-state');
+    let saving = false;
+    let dirtyWhileSaving = false;
+
+    function setState(text: string, kind: '' | 'saving' | 'saved' | 'error') {
+      stateNode.textContent = text;
+      stateNode.className = 'ad-save-state' + (kind ? ' is-' + kind : '');
+    }
+
+    function collect() {
+      const blocks = editor.getBlocks();
+      return {
+        patch: {
+          title: F.title.value.trim(),
+          category: F.category.value as CaseCategory,
+          case_date: F.date.value || todayISO(),
+          vehicle: F.vehicle.value.trim() || null,
+          vehicle_color: F.color.value.trim() || null,
+          summary: F.summary.value.trim() || null,
+          before_condition: F.before.value.trim() || null,
+          work_performed: F.work.value
+            .split('\n')
+            .map((s) => s.trim())
+            .filter(Boolean),
+          duration: F.duration.value.trim() || null,
+          price_note: F.price.value.trim() || null,
+          naver_blog_url: F.blog.value.trim() || null,
+          content_blocks: blocks,
+          cover_image: firstPhotoPath(blocks),
+        },
+        used: usedPhotoPaths(blocks),
+      };
+    }
+
+    async function save(manual = false): Promise<void> {
+      if (saving) {
+        dirtyWhileSaving = true;
+        return;
+      }
+      saving = true;
+      setState('저장 중…', 'saving');
+
+      const { patch, used } = collect();
+      try {
+        await api.updateCase(caseId!, patch);
+        await api.syncCasePhotos(caseId!, used);
+        setState('저장됨', 'saved');
+        el('bar-title').textContent = patch.title || '제목 없음';
+        notice(maybe('edit-error'), '');
+        if (manual) toast('임시저장했습니다.', 'ok');
+        await gallery.refresh();
+        editor.refreshThumbs();
+      } catch (e) {
+        setState('저장하지 못했습니다', 'error');
+        notice(maybe('edit-error'), friendlyError(e), 'error');
+        if (manual) toast(friendlyError(e), 'error');
+      } finally {
+        saving = false;
+        if (dirtyWhileSaving) {
+          dirtyWhileSaving = false;
+          scheduleSave();
+        }
+      }
+    }
+
+    const scheduleSave = debounce(() => void save(false), AUTOSAVE_MS);
+
+    for (const node of Object.values(F)) {
+      node.addEventListener('input', () => {
+        setState('수정 중…', '');
+        scheduleSave();
+      });
+    }
+
+    el('btn-save').addEventListener('click', () => {
+      scheduleSave.flush();
+      void save(true);
+    });
+
+    // 저장하지 않고 화면을 떠나려 하면 먼저 저장을 시도합니다.
+    window.addEventListener('beforeunload', () => {
+      scheduleSave.flush();
+    });
+
+    // ----------------------------------------------------------------
+    // 시작
+    // ----------------------------------------------------------------
+    await gallery.refresh();
+    editor.setBlocks(row.content_blocks ?? []);
+    editor.refreshThumbs();
+    setState('저장됨', 'saved');
+
+    // 넓은 화면에서는 사진함을 바로 띄워둡니다.
+    if (window.matchMedia('(min-width: 1024px)').matches) openPanelBrowse();
+
+    // 자동으로 호출된 setBlocks 때문에 바로 저장이 걸리지 않도록 상태만 되돌립니다.
+    setState('저장됨', 'saved');
+  })().catch((e) => {
+    // 화면이 중간에 멈추면 사장님이 이유를 알 수 없으므로 반드시 보여줍니다.
+    notice(maybe('edit-error'), friendlyError(e), 'error');
+    console.error('[작성 화면]', e);
+  });
+</script>

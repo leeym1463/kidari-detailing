@@ -1,0 +1,229 @@
+---
+// /admin/cases/preview?id=<uuid> — 작성 중인 글을 공개 페이지와 같은 모습으로 확인합니다.
+//
+// 공개 사이트의 global.css 를 그대로 불러오고, 공개 시공사례 상세 페이지와 같은
+// 마크업(.page-hero / .wrap / .prose)을 씁니다. 공개 페이지 파일은 건드리지 않습니다.
+import '../../../styles/global.css';
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>미리보기 | 키다리광택 관리자</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style is:global>
+      /* 미리보기 전용 띠 — 실제 공개 페이지에는 없습니다. */
+      .cms-preview-bar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: #0f2440;
+        color: #fff;
+        padding: 10px 0;
+      }
+      .cms-preview-bar .wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .cms-preview-bar strong {
+        font-size: 0.95rem;
+      }
+      .cms-preview-bar span {
+        font-size: 0.84rem;
+        color: #a9bdd4;
+      }
+      .cms-preview-bar a {
+        margin-left: auto;
+        color: #fff;
+        background: #0a6ed1;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.88rem;
+        padding: 9px 16px;
+        border-radius: 8px;
+      }
+      .cms-preview-bar a + a {
+        margin-left: 0;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+      }
+
+      /* 본문 블록용 보조 스타일 */
+      .prose figure {
+        margin: 0 0 16px;
+      }
+      .prose figcaption {
+        font-size: 0.88rem;
+        color: var(--color-text-muted);
+        margin-top: 6px;
+      }
+      .cms-ba {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .cms-ba figcaption {
+        margin: 0 0 6px;
+        font-weight: 700;
+        color: var(--color-text);
+      }
+      .cms-ba-caption {
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+      }
+      .cms-missing-photo,
+      .cms-empty-note {
+        display: block;
+        padding: 14px;
+        background: var(--color-bg-alt);
+        border-radius: 8px;
+        color: var(--color-text-muted);
+        font-size: 0.92rem;
+      }
+      .cms-state {
+        padding: 60px 0;
+        text-align: center;
+        color: var(--color-text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cms-preview-bar">
+      <div class="wrap">
+        <strong>미리보기</strong>
+        <span id="pv-state">공개 페이지에서 보일 모습입니다. 아직 게시되지 않았습니다.</span>
+        <a id="pv-edit" href="/admin/cases" aria-label="이어서 작성하기">이어서 작성</a>
+        <a href="/admin/cases" aria-label="목록으로 돌아가기">목록</a>
+      </div>
+    </div>
+
+    <div id="pv-loading" class="cms-state">불러오는 중…</div>
+
+    <article id="pv-article" hidden>
+      <section class="page-hero">
+        <div class="wrap">
+          <p class="breadcrumb">
+            <a href="/">홈</a> / <a href="/cases">시공사례</a> / <span id="pv-category"></span>
+          </p>
+          <span class="case-tag" id="pv-tag"></span>
+          <h1 style="margin-top:10px;" id="pv-title"></h1>
+          <p class="lede" id="pv-summary"></p>
+        </div>
+      </section>
+
+      <div class="wrap section">
+        <dl class="case-fact-grid" id="pv-facts"></dl>
+
+        <div class="prose">
+          <h2>시공 전 상태</h2>
+          <p id="pv-before"></p>
+
+          <h2>진행한 작업</h2>
+          <ul id="pv-work"></ul>
+
+          <h2>상세 내용</h2>
+          <div id="pv-body"></div>
+        </div>
+      </div>
+    </article>
+  </body>
+</html>
+
+<script>
+  import { getApi, isConfigured } from '../../../lib/cms-api';
+  import { blocksToHtml } from '../../../lib/blocks-render';
+  import { escapeHtml, formatDate } from '../../../lib/admin-ui';
+  import { usedPhotoPaths } from '../../../lib/cms-types';
+
+  function fail(message: string) {
+    const node = document.getElementById('pv-loading')!;
+    node.textContent = message;
+  }
+
+  (async () => {
+    if (!isConfigured) {
+      fail('관리자 화면 설정값이 아직 등록되지 않았습니다.');
+      return;
+    }
+
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) {
+      fail('어떤 글인지 알 수 없습니다. 목록에서 다시 들어와주세요.');
+      return;
+    }
+
+    const api = await getApi();
+    if (!(await api.currentEmail()) || !(await api.isAdmin())) {
+      location.replace('/admin?next=' + encodeURIComponent(location.pathname + location.search));
+      return;
+    }
+
+    const row = await api.getCase(id);
+    if (!row) {
+      fail('글을 찾을 수 없습니다.');
+      return;
+    }
+
+    const blocks = row.content_blocks ?? [];
+    const paths = usedPhotoPaths(blocks);
+    let urls = new Map<string, string>();
+    try {
+      if (paths.length > 0) urls = await api.signedUrls(paths);
+    } catch {
+      /* 사진을 못 불러와도 글은 보여줍니다 */
+    }
+
+    document.getElementById('pv-category')!.textContent = row.category;
+    document.getElementById('pv-tag')!.textContent = row.category;
+    document.getElementById('pv-title')!.textContent = row.title || '제목 없음';
+    document.getElementById('pv-summary')!.textContent =
+      row.summary || '요약을 입력하면 이 자리에 보입니다.';
+
+    // 공개 페이지와 같은 규칙: 외형복원·판금도색은 차종을 표시하지 않습니다.
+    const facts: { label: string; value: string }[] = [];
+    if (row.category !== '외형복원·판금도색' && row.vehicle) {
+      facts.push({ label: '차종', value: row.vehicle });
+    }
+    if (row.vehicle_color) facts.push({ label: '색상', value: row.vehicle_color });
+    if (row.duration) facts.push({ label: '소요 시간', value: row.duration });
+    if (row.price_note) facts.push({ label: '가격', value: row.price_note });
+    facts.push({ label: '작업일', value: formatDate(row.case_date) });
+
+    document.getElementById('pv-facts')!.innerHTML = facts
+      .map(
+        (f) =>
+          `<div class="fact"><dt>${escapeHtml(f.label)}</dt><dd>${escapeHtml(f.value)}</dd></div>`
+      )
+      .join('');
+
+    document.getElementById('pv-before')!.textContent =
+      row.before_condition || '입고상태를 입력하면 이 자리에 보입니다.';
+
+    const work = row.work_performed ?? [];
+    document.getElementById('pv-work')!.innerHTML =
+      work.length > 0
+        ? work.map((w) => `<li>${escapeHtml(w)}</li>`).join('')
+        : '<li>작업내용을 한 줄에 하나씩 입력하면 이 자리에 보입니다.</li>';
+
+    document.getElementById('pv-body')!.innerHTML = blocksToHtml(blocks, (p) => urls.get(p));
+
+    (document.getElementById('pv-edit') as HTMLAnchorElement).href =
+      `/admin/cases/edit?id=${encodeURIComponent(id)}`;
+    document.getElementById('pv-state')!.textContent =
+      row.status === 'published'
+        ? '게시된 글입니다.'
+        : '임시저장 상태입니다. 아직 공개되지 않았습니다.';
+
+    document.getElementById('pv-loading')!.hidden = true;
+    document.getElementById('pv-article')!.hidden = false;
+  })().catch((e) => {
+    fail('미리보기를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    console.error('[미리보기]', e);
+  });
+</script>

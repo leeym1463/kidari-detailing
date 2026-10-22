@@ -1,0 +1,136 @@
+---
+// /admin/cases/new — 새 시공사례의 기본정보만 먼저 받고 임시저장 글을 만듭니다.
+// 만들고 나면 바로 작성 화면(/admin/cases/edit)으로 넘어갑니다.
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { CASE_CATEGORIES } from '../../../lib/cms-types';
+---
+
+<AdminLayout title="새 시공사례" nav="cases">
+  <div class="ad-wrap-narrow" style="padding:0;">
+    <div class="ad-page-head">
+      <h1>새 시공사례 작성</h1>
+      <p>먼저 기본 정보만 입력하면 바로 글쓰기 화면으로 넘어갑니다. 나머지는 나중에 채워도 됩니다.</p>
+    </div>
+
+    <div class="ad-card">
+      <p id="new-error" class="ad-notice ad-hide" role="alert"></p>
+
+      <form id="new-form" novalidate>
+        <div class="ad-field">
+          <label for="new-title" class="ad-req">시공사례 제목</label>
+          <input
+            id="new-title"
+            class="ad-input"
+            type="text"
+            maxlength="120"
+            aria-label="시공사례 제목"
+            placeholder="예) BMW 7시리즈 광택·유리막코팅 시공"
+            required
+          />
+        </div>
+
+        <div class="ad-field">
+          <label for="new-category" class="ad-req">카테고리</label>
+          <select id="new-category" class="ad-select" aria-label="카테고리" required>
+            {CASE_CATEGORIES.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div class="ad-field">
+          <label for="new-vehicle" class="ad-req">차량명</label>
+          <input
+            id="new-vehicle"
+            class="ad-input"
+            type="text"
+            maxlength="80"
+            aria-label="차량명"
+            placeholder="예) BMW 740i"
+            required
+          />
+        </div>
+
+        <div class="ad-field">
+          <label for="new-date" class="ad-req">작업일</label>
+          <input id="new-date" class="ad-input" type="date" aria-label="작업일" required />
+        </div>
+
+        <div class="ad-btn-row">
+          <button
+            type="submit"
+            id="new-submit"
+            class="ad-btn ad-btn-primary"
+            aria-label="글쓰기 시작"
+          >
+            글쓰기 시작
+          </button>
+          <a class="ad-btn" href="/admin/cases" aria-label="취소하고 목록으로 돌아가기">취소</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import { bootAdmin } from '../../../lib/admin-guard';
+  import { CASE_CATEGORIES, type CaseCategory } from '../../../lib/cms-types';
+  import { buildSlug, el, friendlyError, maybe, notice, todayISO } from '../../../lib/admin-ui';
+
+  (async () => {
+    const session = await bootAdmin();
+    if (!session) return;
+    const { api } = session;
+
+    const titleInput = el<HTMLInputElement>('new-title');
+    const categorySelect = el<HTMLSelectElement>('new-category');
+    const vehicleInput = el<HTMLInputElement>('new-vehicle');
+    const dateInput = el<HTMLInputElement>('new-date');
+    const submit = el<HTMLButtonElement>('new-submit');
+
+    dateInput.value = todayISO();
+    titleInput.focus();
+
+    el<HTMLFormElement>('new-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const title = titleInput.value.trim();
+      const vehicle = vehicleInput.value.trim();
+      const caseDate = dateInput.value || todayISO();
+      const category = categorySelect.value as CaseCategory;
+
+      if (!title) {
+        notice(maybe('new-error'), '시공사례 제목을 입력해주세요.', 'error');
+        titleInput.focus();
+        return;
+      }
+      if (!vehicle) {
+        notice(maybe('new-error'), '차량명을 입력해주세요.', 'error');
+        vehicleInput.focus();
+        return;
+      }
+      if (!CASE_CATEGORIES.includes(category)) {
+        notice(maybe('new-error'), '카테고리를 선택해주세요.', 'error');
+        return;
+      }
+
+      notice(maybe('new-error'), '');
+      submit.disabled = true;
+      submit.textContent = '만드는 중…';
+
+      try {
+        const created = await api.createCase({
+          slug: buildSlug(category, caseDate),
+          title,
+          category,
+          case_date: caseDate,
+        });
+        // 차량명은 기본정보의 일부라 바로 이어서 저장합니다.
+        await api.updateCase(created.id, { vehicle });
+        location.href = `/admin/cases/edit?id=${encodeURIComponent(created.id)}`;
+      } catch (e) {
+        notice(maybe('new-error'), friendlyError(e), 'error');
+        submit.disabled = false;
+        submit.textContent = '글쓰기 시작';
+      }
+    });
+  })();
+</script>
