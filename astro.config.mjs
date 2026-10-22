@@ -8,5 +8,6 @@ export default defineConfig({
   site: SITE_URL,
   output: 'static',
   trailingSlash: 'never',
-  integrations: [sitemap()],
+  // 관리자 화면은 색인 대상이 아니므로 사이트맵에서 제외합니다.
+  integrations: [sitemap({ filter: (page) => !page.includes('/admin') })],
 });

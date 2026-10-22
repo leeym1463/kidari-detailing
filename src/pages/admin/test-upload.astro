@@ -1,0 +1,204 @@
+---
+import AdminSpikeLayout from '../../layouts/AdminSpikeLayout.astro';
+---
+
+<AdminSpikeLayout title="사진 업로드 검증">
+  <h1>사진 업로드 · 삭제 검증</h1>
+  <p class="note">
+    휴대폰에서 이 화면을 열면 카메라 앨범에서 여러 장을 한 번에 고를 수 있습니다.
+    업로드 전에 브라우저에서 긴 변 1600px·WebP로 변환합니다.
+  </p>
+
+  <div class="card">
+    <h2 style="margin-top:0;">1. 사진 선택</h2>
+    <label for="files">업로드할 사진 (여러 장 선택 가능)</label>
+    <input id="files" type="file" accept="image/*" multiple aria-label="업로드할 사진 선택" />
+    <p class="note" id="login-warn" style="margin:10px 0 0;"></p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">2. 변환 · 업로드 결과</h2>
+    <table>
+      <thead>
+        <tr><th>파일</th><th>원본</th><th>변환 후</th><th>해상도</th><th>포맷</th><th>업로드</th></tr>
+      </thead>
+      <tbody id="rows"><tr><td colspan="6" class="note">아직 없음</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">3. 임시 사진함</h2>
+    <button id="btn-reload" class="ghost" aria-label="사진함 새로고침">새로고침</button>
+    <div id="gallery"><p class="note">로그인 후 새로고침을 눌러주세요.</p></div>
+  </div>
+
+  <div class="log" id="log" aria-label="업로드 로그">준비됨.</div>
+</AdminSpikeLayout>
+
+<script>
+  import { getSupabase, STORAGE_BUCKET, buildTempPath, isConfigured } from '../../lib/supabase';
+  import { processForUpload, formatBytes } from '../../lib/image';
+
+  const logEl = document.getElementById('log')!;
+  const say = (m: string) => {
+    logEl.textContent += '\n' + m;
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+
+  if (!isConfigured) {
+    logEl.textContent = '환경변수가 설정되지 않았습니다.';
+    throw new Error('not configured');
+  }
+  const supabase = getSupabase()!;
+
+  async function requireLogin(): Promise<boolean> {
+    const { data } = await supabase.auth.getSession();
+    const warn = document.getElementById('login-warn')!;
+    if (!data.session) {
+      warn.innerHTML = '<span class="ng">로그인이 필요합니다. <a href="/admin/test-login">로그인 검증 화면</a>에서 먼저 로그인하세요.</span>';
+      return false;
+    }
+    warn.innerHTML = '<span class="ok">로그인됨: ' + data.session.user.email + '</span>';
+    return true;
+  }
+
+  const rowsEl = document.getElementById('rows')!;
+  let firstRow = true;
+
+  document.getElementById('files')!.addEventListener('change', async (e) => {
+    const input = e.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    if (files.length === 0) return;
+    if (!(await requireLogin())) return;
+
+    say('\n선택한 사진 ' + files.length + '장 처리 시작');
+
+    for (const file of files) {
+      if (firstRow) {
+        rowsEl.innerHTML = '';
+        firstRow = false;
+      }
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + file.name.slice(0, 18) + '</td><td colspan="5" class="note">변환 중…</td>';
+      rowsEl.appendChild(tr);
+
+      try {
+        const img = await processForUpload(file);
+        const path = buildTempPath(img.ext);
+
+        const up = await supabase.storage.from(STORAGE_BUCKET).upload(path, img.blob, {
+          contentType: img.blob.type,
+          upsert: false,
+        });
+        if (up.error) throw new Error('Storage: ' + up.error.message);
+
+        const row = await supabase.from('photos').insert({
+          storage_path: path,
+          width: img.width,
+          height: img.height,
+          bytes: img.bytes,
+          status: 'temp',
+        });
+        if (row.error) throw new Error('DB: ' + row.error.message);
+
+        tr.innerHTML =
+          '<td>' + file.name.slice(0, 18) + '</td>' +
+          '<td>' + formatBytes(img.originalBytes) + '</td>' +
+          '<td><b>' + formatBytes(img.bytes) + '</b></td>' +
+          '<td>' + img.width + '×' + img.height + '</td>' +
+          '<td>' + (img.format === 'webp' ? 'WebP' : 'JPEG(대체)') + '</td>' +
+          '<td class="ok">성공</td>';
+
+        say(
+          '  ' + file.name + ' : ' + formatBytes(img.originalBytes) + ' → ' + formatBytes(img.bytes) +
+          ' (' + (img.originalBytes / img.bytes).toFixed(1) + '배 감소, ' + img.format + ', ' + img.ms + 'ms)'
+        );
+      } catch (err: any) {
+        tr.innerHTML =
+          '<td>' + file.name.slice(0, 18) + '</td><td colspan="4" class="ng">' + err.message + '</td><td class="ng">실패</td>';
+        say('  [실패] ' + file.name + ' — ' + err.message);
+      }
+    }
+    input.value = '';
+    await loadGallery();
+  });
+
+  async function loadGallery() {
+    if (!(await requireLogin())) return;
+    const gallery = document.getElementById('gallery')!;
+    gallery.innerHTML = '<p class="note">불러오는 중…</p>';
+
+    const { data, error } = await supabase
+      .from('photos')
+      .select('id, storage_path, width, height, bytes, status, case_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      gallery.innerHTML = '<p class="ng">조회 실패: ' + error.message + '</p>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      gallery.innerHTML = '<p class="note">사진함이 비어 있습니다.</p>';
+      return;
+    }
+
+    // 비공개 버킷이므로 서명 URL로 썸네일을 봅니다.
+    const paths = data.map((p) => p.storage_path);
+    const signed = await supabase.storage.from(STORAGE_BUCKET).createSignedUrls(paths, 600);
+    const urlOf = new Map<string, string>();
+    signed.data?.forEach((s) => s.path && s.signedUrl && urlOf.set(s.path, s.signedUrl));
+
+    const table = document.createElement('table');
+    table.innerHTML =
+      '<thead><tr><th>미리보기</th><th>정보</th><th>상태</th><th>삭제</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+
+    for (const p of data) {
+      const tr = document.createElement('tr');
+      const url = urlOf.get(p.storage_path);
+      tr.innerHTML =
+        '<td>' + (url ? '<img class="thumb" src="' + url + '" alt="업로드한 사진 미리보기" />' : '-') + '</td>' +
+        '<td>' + p.width + '×' + p.height + '<br>' + formatBytes(p.bytes ?? 0) +
+        '<br><span class="note">' + new Date(p.created_at).toLocaleString('ko-KR') + '</span></td>' +
+        '<td>' + p.status + (p.case_id ? '<br><span class="ok">글 연결됨</span>' : '<br><span class="note">미연결</span>') + '</td>' +
+        '<td></td>';
+
+      const btn = document.createElement('button');
+      btn.className = 'danger';
+      btn.textContent = '삭제';
+      btn.setAttribute('aria-label', '이 사진 삭제');
+      btn.addEventListener('click', async () => {
+        if (!confirm('이 사진을 삭제할까요? 되돌릴 수 없습니다.')) return;
+        btn.disabled = true;
+        say('\n삭제 시도: ' + p.storage_path);
+
+        const rm = await supabase.storage.from(STORAGE_BUCKET).remove([p.storage_path]);
+        if (rm.error) {
+          say('  [실패] Storage — ' + rm.error.message);
+          btn.disabled = false;
+          return;
+        }
+        say('  Storage 파일 삭제됨');
+
+        const del = await supabase.from('photos').delete().eq('id', p.id);
+        if (del.error) {
+          say('  [실패] DB — ' + del.error.message);
+          btn.disabled = false;
+          return;
+        }
+        say('  photos 행 삭제됨 → 둘 다 정리 완료');
+        await loadGallery();
+      });
+      tr.lastElementChild!.appendChild(btn);
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    gallery.innerHTML = '';
+    gallery.appendChild(table);
+  }
+
+  document.getElementById('btn-reload')!.addEventListener('click', loadGallery);
+  requireLogin();
+</script>

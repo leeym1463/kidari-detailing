@@ -1,0 +1,102 @@
+---
+// Phase 0.5 기술검증 전용 레이아웃.
+// 공개 사이트의 Layout.astro와 완전히 분리되어 있어 SEO 구조에 영향을 주지 않습니다.
+// Phase 1에서 실제 관리자 레이아웃으로 교체 예정입니다.
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} | 키다리광택 관리자(검증)</title>
+    <!-- is:global — 레이아웃의 scoped 스타일은 slot 내용에 적용되지 않으므로 전역으로 둡니다.
+         이 페이지들은 공개 사이트와 분리돼 있어 global.css에 영향을 주지 않습니다. -->
+    <style is:global>
+      :root {
+        --navy: #11203a;
+        --blue: #2563eb;
+        --line: #e3e7ec;
+        --muted: #5b6570;
+        --ok: #047857;
+        --ng: #b91c1c;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 20px 16px 64px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+        color: #14171a;
+        background: #f7f8fa;
+        line-height: 1.6;
+      }
+      main { max-width: 720px; margin: 0 auto; }
+      h1 { font-size: 1.3rem; margin: 0 0 4px; color: var(--navy); }
+      h2 { font-size: 1.02rem; margin: 26px 0 10px; color: var(--navy); }
+      .note { color: var(--muted); font-size: 0.88rem; margin: 0 0 20px; }
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 14px;
+      }
+      label { display: block; font-weight: 700; font-size: 0.88rem; margin: 0 0 6px; }
+      input[type='email'], input[type='password'] {
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-size: 16px; /* iOS 자동 확대 방지 */
+        margin-bottom: 12px;
+      }
+      button {
+        appearance: none;
+        border: 1px solid var(--navy);
+        background: var(--navy);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 11px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin: 0 6px 6px 0;
+      }
+      button.ghost { background: #fff; color: var(--navy); }
+      button.danger { background: var(--ng); border-color: var(--ng); }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .log {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 12px;
+        border-radius: 8px;
+        max-height: 340px;
+        overflow: auto;
+      }
+      .ok { color: var(--ok); font-weight: 700; }
+      .ng { color: var(--ng); font-weight: 700; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      th, td { border-bottom: 1px solid var(--line); padding: 7px 4px; text-align: left; }
+      nav a { color: var(--blue); font-weight: 700; margin-right: 14px; font-size: 0.9rem; }
+      .thumb { width: 72px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav>
+        <a href="/admin/test-login">로그인 검증</a>
+        <a href="/admin/test-upload">사진 업로드 검증</a>
+      </nav>
+      <slot />
+    </main>
+  </body>
+</html>

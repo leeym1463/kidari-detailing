@@ -1,0 +1,246 @@
+---
+import AdminSpikeLayout from '../../layouts/AdminSpikeLayout.astro';
+---
+
+<AdminSpikeLayout title="로그인 · 권한 검증">
+  <h1>로그인 · 권한 검증</h1>
+  <p class="note">
+    Phase 0.5 기술검증 화면입니다. 실제 관리자 화면이 아니며 Phase 1에서 교체됩니다.
+  </p>
+
+  <div class="card">
+    <h2 style="margin-top:0;">관리자 로그인</h2>
+    <label for="email">관리자 이메일</label>
+    <input id="email" type="email" autocomplete="username" aria-label="관리자 이메일" placeholder="admin@example.com" />
+
+    <label for="password">비밀번호</label>
+    <input id="password" type="password" autocomplete="current-password" aria-label="관리자 비밀번호" />
+
+    <button id="btn-login" aria-label="로그인">로그인</button>
+    <button id="btn-logout" class="ghost" aria-label="로그아웃">로그아웃</button>
+    <button id="btn-wrong" class="ghost" aria-label="잘못된 비밀번호로 로그인 시도">잘못된 비밀번호 시도</button>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">현재 상태</h2>
+    <table>
+      <tbody>
+        <tr><th>로그인</th><td id="st-session">확인 중…</td></tr>
+        <tr><th>계정</th><td id="st-email">-</td></tr>
+        <tr><th>관리자 권한(is_admin)</th><td id="st-admin">-</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">권한 테스트</h2>
+    <p class="note" style="margin-bottom:10px;">
+      로그아웃 상태에서는 모두 차단되어야 하고, 관리자로 로그인하면 모두 통과해야 정상입니다.
+    </p>
+    <button id="btn-test-anon" class="ghost" aria-label="비로그인 권한 차단 테스트 실행">비로그인 차단 테스트</button>
+    <button id="btn-test-admin" aria-label="관리자 권한 테스트 실행">관리자 권한 테스트</button>
+    <button id="btn-clear" class="ghost" aria-label="로그 지우기">로그 지우기</button>
+  </div>
+
+  <div class="log" id="log" aria-label="테스트 로그">준비됨.</div>
+</AdminSpikeLayout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+  import { getSupabase, STORAGE_BUCKET, buildTempPath, isConfigured } from '../../lib/supabase';
+
+  const logEl = document.getElementById('log')!;
+  const say = (msg: string) => {
+    logEl.textContent += '\n' + msg;
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  const pass = (m: string) => say('  [통과] ' + m);
+  const fail = (m: string) => say('  [실패] ' + m);
+
+  if (!isConfigured) {
+    logEl.textContent = '환경변수(PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_PUBLISHABLE_KEY)가 설정되지 않았습니다.';
+    throw new Error('not configured');
+  }
+
+  const supabase = getSupabase()!;
+
+  // 세션을 공유하지 않는 별도 클라이언트 = 항상 비로그인(anon) 상태
+  const anon = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  );
+
+  async function refresh() {
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+    document.getElementById('st-session')!.innerHTML = session
+      ? '<span class="ok">로그인됨</span>'
+      : '<span class="ng">로그아웃</span>';
+    document.getElementById('st-email')!.textContent = session?.user?.email ?? '-';
+
+    if (session) {
+      const { data: isAdmin, error } = await supabase.rpc('is_admin');
+      document.getElementById('st-admin')!.innerHTML = error
+        ? '<span class="ng">확인 실패: ' + error.message + '</span>'
+        : isAdmin
+          ? '<span class="ok">관리자 ✅</span>'
+          : '<span class="ng">관리자 아님</span>';
+    } else {
+      document.getElementById('st-admin')!.textContent = '-';
+    }
+  }
+
+  document.getElementById('btn-login')!.addEventListener('click', async () => {
+    const email = (document.getElementById('email') as HTMLInputElement).value.trim();
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    say('\n로그인 시도: ' + email);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    error ? fail('로그인 실패 — ' + error.message) : pass('로그인 성공');
+    await refresh();
+  });
+
+  document.getElementById('btn-wrong')!.addEventListener('click', async () => {
+    const email = (document.getElementById('email') as HTMLInputElement).value.trim();
+    say('\n잘못된 비밀번호로 로그인 시도');
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: 'definitely-wrong-' + Date.now(),
+    });
+    error ? pass('차단됨 — ' + error.message) : fail('잘못된 비밀번호인데 로그인됨 (심각)');
+    await refresh();
+  });
+
+  document.getElementById('btn-logout')!.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    say('\n로그아웃 완료');
+    await refresh();
+  });
+
+  document.getElementById('btn-clear')!.addEventListener('click', () => {
+    logEl.textContent = '준비됨.';
+  });
+
+  // ---- 비로그인 차단 테스트 ----
+  document.getElementById('btn-test-anon')!.addEventListener('click', async () => {
+    say('\n=== 비로그인(anon) 차단 테스트 ===');
+
+    const r1 = await anon.from('cases').select('id').limit(1);
+    r1.error ? pass('cases 읽기 차단 — ' + r1.error.message) : fail('cases를 읽을 수 있음 (' + (r1.data?.length ?? 0) + '행)');
+
+    const r2 = await anon.from('cases').insert({ slug: 'anon-' + Date.now(), title: 'x', category: '스팀세차' });
+    r2.error ? pass('cases 쓰기 차단 — ' + r2.error.message) : fail('cases에 쓸 수 있음 (심각)');
+
+    const r3 = await anon.from('photos').insert({ storage_path: 'temp/anon-' + Date.now() + '.webp' });
+    r3.error ? pass('photos 쓰기 차단 — ' + r3.error.message) : fail('photos에 쓸 수 있음 (심각)');
+
+    const r4 = await anon.from('admins').select('user_id');
+    r4.error || (r4.data?.length ?? 0) === 0
+      ? pass('admins 조회 차단')
+      : fail('관리자 명단이 노출됨 (심각)');
+
+    const blob = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/webp' });
+    const r5 = await anon.storage.from(STORAGE_BUCKET).upload('temp/anon-' + Date.now() + '.webp', blob);
+    r5.error ? pass('Storage 업로드 차단 — ' + r5.error.message) : fail('Storage에 업로드됨 (심각)');
+
+    const r6 = await anon.storage.from(STORAGE_BUCKET).remove(['temp/anything.webp']);
+    const removed = (r6.data?.length ?? 0) > 0;
+    r6.error || !removed ? pass('Storage 삭제 차단') : fail('Storage 파일을 지울 수 있음 (심각)');
+
+    say('=== 비로그인 테스트 종료 ===');
+  });
+
+  // ---- 관리자 권한 테스트 (전체 매트릭스) ----
+  const results: { name: string; ok: boolean; detail: string }[] = [];
+  const check = (name: string, ok: boolean, detail = '') => {
+    results.push({ name, ok, detail });
+    (ok ? pass : fail)(name + (detail ? ' — ' + detail : ''));
+    return ok;
+  };
+
+  document.getElementById('btn-test-admin')!.addEventListener('click', async () => {
+    results.length = 0;
+    say('\n=== 관리자 권한 전체 테스트 ===');
+    const { data: sess } = await supabase.auth.getSession();
+    if (!sess.session) {
+      fail('먼저 로그인하세요');
+      return;
+    }
+
+    // 3. 관리자 판별
+    const rpc = await supabase.rpc('is_admin');
+    check('is_admin() = true', rpc.data === true, rpc.error ? rpc.error.message : 'returned ' + rpc.data);
+
+    // 2-A. cases CRUD
+    const slug = 'spike-test-' + Date.now();
+    const ins = await supabase
+      .from('cases')
+      .insert({ slug, title: '스파이크 테스트 글', category: '스팀세차', status: 'draft' })
+      .select()
+      .single();
+    if (!check('cases INSERT', !ins.error, ins.error?.message)) {
+      say('=== 중단: cases 쓰기 불가 ===');
+      return;
+    }
+    const caseId = ins.data.id;
+
+    const sel = await supabase.from('cases').select('id, title, updated_at').eq('id', caseId).single();
+    check('cases SELECT', !sel.error, sel.error?.message);
+
+    const before = sel.data?.updated_at;
+    await new Promise((r) => setTimeout(r, 1100));
+    const upd = await supabase.from('cases').update({ title: '수정됨' }).eq('id', caseId).select().single();
+    check('cases UPDATE', !upd.error, upd.error?.message);
+    check('updated_at 트리거 동작', !!upd.data && upd.data.updated_at !== before);
+
+    // 2-B. photos CRUD + Storage
+    const objectPath = buildTempPath('webp');
+    const tiny = new Blob([new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0])], { type: 'image/webp' });
+
+    const up = await supabase.storage.from(STORAGE_BUCKET).upload(objectPath, tiny, { contentType: 'image/webp' });
+    check('Storage 업로드', !up.error, up.error?.message);
+
+    const signed = await supabase.storage.from(STORAGE_BUCKET).createSignedUrl(objectPath, 60);
+    check('Storage 읽기(서명 URL)', !signed.error && !!signed.data?.signedUrl, signed.error?.message);
+
+    const pIns = await supabase
+      .from('photos')
+      .insert({ storage_path: objectPath, width: 1, height: 1, bytes: tiny.size, status: 'temp' })
+      .select()
+      .single();
+    check('photos INSERT', !pIns.error, pIns.error?.message);
+
+    const pSel = await supabase.from('photos').select('id').eq('storage_path', objectPath);
+    check('photos SELECT', !pSel.error && (pSel.data?.length ?? 0) === 1, pSel.error?.message);
+
+    const pUpd = await supabase.from('photos').update({ case_id: caseId }).eq('storage_path', objectPath);
+    check('photos UPDATE(글 연결)', !pUpd.error, pUpd.error?.message);
+
+    // 11. 7일 정리 조건 — 글에 연결된 사진은 대상에서 빠져야 함
+    const protect = await supabase
+      .from('photos')
+      .select('id')
+      .eq('status', 'temp')
+      .is('case_id', null)
+      .eq('storage_path', objectPath);
+    check('정리 대상에서 제외됨(글 연결 사진 보호)', (protect.data?.length ?? 0) === 0);
+
+    const rm = await supabase.storage.from(STORAGE_BUCKET).remove([objectPath]);
+    check('Storage 삭제', !rm.error && (rm.data?.length ?? 0) > 0, rm.error?.message);
+
+    const pDel = await supabase.from('photos').delete().eq('storage_path', objectPath);
+    check('photos DELETE', !pDel.error, pDel.error?.message);
+
+    const del = await supabase.from('cases').delete().eq('id', caseId);
+    check('cases DELETE', !del.error, del.error?.message);
+
+    const leftover = await supabase.from('cases').select('id').eq('slug', slug);
+    check('테스트 데이터 정리 완료', (leftover.data?.length ?? 0) === 0);
+
+    const passed = results.filter((r) => r.ok).length;
+    say(`\n=== 결과: ${passed}/${results.length} 통과 ===`);
+    (window as any).__adminTestResults = results;
+  });
+
+  refresh();
+</script>
