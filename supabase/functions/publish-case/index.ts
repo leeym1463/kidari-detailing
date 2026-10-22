@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
 
     // --- 3. 사진 내려받기 + 저장소 경로 부여 -----------------------------
     const files: { path: string; base64: string }[] = [];
-    const pathMap = new Map<string, string>(); // storage_path -> img-NN.webp
+    const pathMap = new Map<string, string>(); // storage_path -> img-NN.<원본확장자> (iOS는 jpg, PC는 webp)
     let n = 1;
 
     for (const p of photos ?? []) {
