@@ -1,0 +1,278 @@
+---
+// /admin — 로그인 화면과 관리자 홈을 한 페이지에서 처리합니다.
+// 로그인 전에는 로그인 카드만, 로그인 후에는 관리자 홈을 보여줍니다.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="관리자" nav="home">
+  <!-- ================= 로그인 화면 ================= -->
+  <section id="login-view" class="ad-login-screen ad-hide" aria-labelledby="login-heading">
+    <div class="ad-login-box">
+      <div class="ad-login-logo">
+        <span class="ad-login-mark" aria-hidden="true">K</span>
+        <strong>키다리광택</strong>
+        <span class="ad-login-sub">춘천 자동차 디테일링</span>
+      </div>
+
+      <div class="ad-card">
+        <h1 id="login-heading" style="margin-bottom:18px;">관리자 로그인</h1>
+
+        <p id="login-error" class="ad-notice ad-hide" role="alert"></p>
+
+        <form id="login-form" novalidate>
+          <div class="ad-field">
+            <label for="login-email">관리자 이메일</label>
+            <input
+              id="login-email"
+              name="email"
+              class="ad-input"
+              type="email"
+              inputmode="email"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              aria-label="관리자 이메일"
+              required
+            />
+          </div>
+
+          <div class="ad-field">
+            <label for="login-password">비밀번호</label>
+            <input
+              id="login-password"
+              name="password"
+              class="ad-input"
+              type="password"
+              autocomplete="current-password"
+              aria-label="관리자 비밀번호"
+              required
+            />
+          </div>
+
+          <div class="ad-field">
+            <label class="ad-check" for="login-remember">
+              <input id="login-remember" type="checkbox" checked aria-label="로그인 상태 유지" />
+              로그인 상태 유지
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            id="login-submit"
+            class="ad-btn ad-btn-primary ad-btn-block"
+            aria-label="로그인"
+          >
+            로그인
+          </button>
+        </form>
+      </div>
+
+      <p class="ad-center ad-small ad-muted" style="margin-top:18px;">
+        키다리광택 관리자만 사용하는 화면입니다.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= 관리자 홈 ================= -->
+  <section id="home-view" class="ad-hide" aria-labelledby="home-heading">
+    <div class="ad-page-head">
+      <h1 id="home-heading">무엇을 하시겠어요?</h1>
+      <p>시공사례를 작성하고 사진을 관리할 수 있습니다.</p>
+    </div>
+
+    <div class="ad-home-grid">
+      <a
+        class="ad-home-card ad-home-card-primary"
+        href="/admin/cases/new"
+        aria-label="새 시공사례 작성하기"
+      >
+        <svg class="ad-home-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <strong>새 시공사례 작성</strong>
+        <span>사진과 글을 넣어 새 시공사례를 만듭니다.</span>
+      </a>
+
+      <a class="ad-home-card" href="/admin/cases" aria-label="시공사례 목록 보기">
+        <svg class="ad-home-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        <strong>시공사례 목록</strong>
+        <span>작성한 글을 확인하고 이어서 수정합니다.</span>
+      </a>
+
+      <a class="ad-home-card" href="/admin/photos" aria-label="사진함 열기">
+        <svg class="ad-home-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        <strong>사진함</strong>
+        <span>휴대폰으로 찍은 작업사진을 미리 올려둡니다.</span>
+      </a>
+    </div>
+
+    <div class="ad-card">
+      <h2>지금 상황</h2>
+      <dl class="ad-stat-row">
+        <div class="ad-stat">
+          <dt>작성 중인 글</dt>
+          <dd><span id="stat-drafts">-</span><small> 건</small></dd>
+        </div>
+        <div class="ad-stat">
+          <dt>사진함에 있는 사진</dt>
+          <dd><span id="stat-photos">-</span><small> 장</small></dd>
+        </div>
+        <div class="ad-stat">
+          <dt>7일 안에 정리될 사진</dt>
+          <dd><span id="stat-expiring">-</span><small> 장</small></dd>
+        </div>
+      </dl>
+      <p class="ad-small ad-muted" style="margin:14px 0 0;">
+        사진함의 사용하지 않은 사진은 7일 후 자동으로 정리됩니다. 글에 넣은 사진은 정리되지
+        않습니다.
+      </p>
+    </div>
+
+    <div class="ad-card">
+      <h2>최근 작성한 글</h2>
+      <ul class="ad-recent" id="recent-list"></ul>
+      <div id="recent-empty" class="ad-empty ad-hide">
+        <p>아직 작성한 글이 없습니다.</p>
+        <a class="ad-btn ad-btn-primary" href="/admin/cases/new" aria-label="첫 시공사례 작성하기">
+          첫 시공사례 작성하기
+        </a>
+      </div>
+    </div>
+  </section>
+</AdminLayout>
+
+<script>
+  import { bootAdmin } from '../../lib/admin-guard';
+  import { getApi, isConfigured } from '../../lib/cms-api';
+  import {
+    daysUntilCleanup,
+    el,
+    escapeHtml,
+    formatDate,
+    friendlyError,
+    maybe,
+    notice,
+    show,
+  } from '../../lib/admin-ui';
+
+  const params = new URLSearchParams(location.search);
+
+  /** 로그인 후 돌아갈 주소. 외부 주소로 튕기지 않도록 같은 사이트 경로만 허용합니다. */
+  function safeNext(): string {
+    const raw = params.get('next');
+    if (!raw) return '/admin';
+    if (!raw.startsWith('/') || raw.startsWith('//')) return '/admin';
+    return raw;
+  }
+
+  // ------------------------------------------------------------------
+  // 로그인 화면
+  // ------------------------------------------------------------------
+  function showLogin() {
+    // 로그인 전에는 상단 관리자 메뉴를 감춥니다.
+    document.querySelector('.ad-header')?.classList.add('ad-hide');
+    const app = maybe('ad-app');
+    app?.classList.remove('ad-main');
+    show(app, true);
+    show(el('login-view'), true);
+
+    if (params.get('denied')) {
+      notice(maybe('login-error'), '이 계정은 관리자로 등록되어 있지 않습니다.', 'error');
+    }
+
+    const form = el<HTMLFormElement>('login-form');
+    const submit = el<HTMLButtonElement>('login-submit');
+    const emailInput = el<HTMLInputElement>('login-email');
+
+    emailInput.focus();
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = emailInput.value.trim();
+      const password = el<HTMLInputElement>('login-password').value;
+      const remember = el<HTMLInputElement>('login-remember').checked;
+
+      if (!email || !password) {
+        notice(maybe('login-error'), '이메일과 비밀번호를 모두 입력해주세요.', 'error');
+        return;
+      }
+
+      notice(maybe('login-error'), '');
+      submit.disabled = true;
+      submit.textContent = '로그인 중…';
+
+      try {
+        const api = await getApi();
+        const result = await api.signIn(email, password, remember);
+        if (!result.ok) {
+          notice(maybe('login-error'), friendlyError(result.error), 'error');
+          return;
+        }
+        // 관리자 명단에 없는 계정이면 되돌립니다.
+        if (!(await api.isAdmin())) {
+          await api.signOut();
+          notice(maybe('login-error'), '이 계정은 관리자로 등록되어 있지 않습니다.', 'error');
+          return;
+        }
+        location.href = safeNext();
+      } catch (e) {
+        notice(maybe('login-error'), friendlyError(e), 'error');
+      } finally {
+        submit.disabled = false;
+        submit.textContent = '로그인';
+      }
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // 관리자 홈
+  // ------------------------------------------------------------------
+  async function showHome(api: Awaited<ReturnType<typeof getApi>>) {
+    show(el('home-view'), true);
+
+    try {
+      const [cases, photos] = await Promise.all([api.listCases(), api.listPhotos()]);
+
+      const drafts = cases.filter((c) => c.status === 'draft');
+      const unused = photos.filter((p) => !p.case_id);
+      const expiring = unused.filter((p) => daysUntilCleanup(p.created_at) <= 7);
+
+      el('stat-drafts').textContent = String(drafts.length);
+      el('stat-photos').textContent = String(photos.length);
+      el('stat-expiring').textContent = String(expiring.length);
+
+      const recent = cases.slice(0, 5);
+      const list = el('recent-list');
+      if (recent.length === 0) {
+        show(list, false);
+        show(el('recent-empty'), true);
+        return;
+      }
+      list.innerHTML = recent
+        .map((c) => {
+          const badge =
+            c.status === 'published'
+              ? '<span class="ad-badge ad-badge-pub">게시됨</span>'
+              : '<span class="ad-badge ad-badge-draft">임시저장</span>';
+          return `<li>
+            ${badge}
+            <a href="/admin/cases/edit?id=${encodeURIComponent(c.id)}">${escapeHtml(c.title || '제목 없음')}</a>
+            <time datetime="${escapeHtml(c.updated_at)}">${formatDate(c.updated_at)}</time>
+          </li>`;
+        })
+        .join('');
+    } catch (e) {
+      notice(maybe('ad-mode-banner'), friendlyError(e), 'error');
+    }
+  }
+
+  // ------------------------------------------------------------------
+  (async () => {
+    const session = await bootAdmin({ allowAnonymous: true });
+    if (session) {
+      await showHome(session.api);
+      return;
+    }
+    // 설정값이 없으면 bootAdmin 이 이미 안내문을 띄웠으므로 로그인 폼은 숨겨둡니다.
+    if (!isConfigured) return;
+    showLogin();
+  })();
+</script>

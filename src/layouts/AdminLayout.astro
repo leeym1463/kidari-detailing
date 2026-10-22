@@ -1,0 +1,87 @@
+---
+// 관리자 화면 공통 틀.
+//
+// 공개 사이트의 Layout.astro 와 완전히 분리되어 있습니다 — 공개 페이지에는
+// 관리자 CSS·JS 가 전혀 들어가지 않습니다.
+//
+// 색인 차단: noindex 메타 + robots.txt 의 Disallow: /admin + 사이트맵 제외.
+import '../styles/admin.css';
+
+interface Props {
+  title: string;
+  /** 헤더에서 현재 위치를 표시할 메뉴 키. 로그인 화면처럼 헤더가 없으면 생략합니다. */
+  nav?: 'home' | 'cases' | 'photos';
+  /** true 면 헤더 없이 가운데 정렬된 빈 화면으로 씁니다(로그인 화면). */
+  bare?: boolean;
+}
+
+const { title, nav, bare = false } = Astro.props;
+
+const navItems: { key: Props['nav']; href: string; label: string }[] = [
+  { key: 'home', href: '/admin', label: '홈' },
+  { key: 'cases', href: '/admin/cases', label: '시공사례' },
+  { key: 'photos', href: '/admin/photos', label: '사진함' },
+];
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>{title} | 키다리광택 관리자</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    {
+      !bare && (
+        <header class="ad-header">
+          <div class="ad-wrap">
+            <a class="ad-brand" href="/admin" aria-label="관리자 홈으로 이동">
+              <span class="ad-brand-mark" aria-hidden="true">K</span>
+              <span>
+                키다리광택
+                <small>관리자</small>
+              </span>
+            </a>
+
+            <nav class="ad-nav" aria-label="관리자 메뉴">
+              {
+                navItems.map((item) => (
+                  <a href={item.href} aria-current={nav === item.key ? 'page' : undefined}>
+                    {item.label}
+                  </a>
+                ))
+              }
+            </nav>
+
+            <span class="ad-header-spacer"></span>
+
+            <div class="ad-account">
+              <span id="ad-account-email" aria-label="로그인한 계정"></span>
+              <button type="button" id="ad-logout" class="ad-btn ad-btn-sm" aria-label="로그아웃">
+                로그아웃
+              </button>
+            </div>
+          </div>
+        </header>
+      )
+    }
+
+    <!-- 인증 확인 중에 보여줄 화면 -->
+    <div id="ad-boot" class="ad-boot">
+      <div id="ad-boot-spinner" class="ad-spinner" role="presentation"></div>
+      <p id="ad-boot-message" class="ad-notice ad-hide"></p>
+    </div>
+
+    <!-- 인증이 끝나면 열립니다 -->
+    <main id="ad-app" class={bare ? 'ad-hide' : 'ad-main ad-hide'}>
+      <div class={bare ? '' : 'ad-wrap'}>
+        <p id="ad-mode-banner" class="ad-notice ad-hide"></p>
+        <slot />
+      </div>
+    </main>
+  </body>
+</html>
