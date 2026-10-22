@@ -1234,3 +1234,17 @@ details.ad-section > .body {
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 10px;
 }
+
+/* 좁은 화면에서는 글 제목이 저장 상태를 밀어내지 않도록 한 줄을 통째로 씁니다. */
+@media (max-width: 640px) {
+  .ad-editor-bar {
+    margin-top: -20px;
+  }
+  .ad-editor-bar .title {
+    flex: 1 1 100%;
+  }
+  .ad-editor-bar .ad-save-state {
+    flex: 0 0 auto;
+    margin-right: auto;
+  }
+}
