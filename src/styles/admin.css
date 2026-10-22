@@ -1240,11 +1240,94 @@ details.ad-section > .body {
   .ad-editor-bar {
     margin-top: -20px;
   }
+  /* 제목 입력칸이 바로 아래 있으므로 좁은 화면에서는 바의 제목을 숨겨 높이를 줄입니다. */
   .ad-editor-bar .title {
-    flex: 1 1 100%;
+    display: none;
   }
   .ad-editor-bar .ad-save-state {
     flex: 0 0 auto;
     margin-right: auto;
+  }
+}
+
+/* ---------------------------------------------------------------
+   제목 중심 작성 화면 (네이버 블로그 글쓰기 흐름)
+   --------------------------------------------------------------- */
+
+.ad-title-field {
+  background: var(--ad-surface);
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-radius);
+  box-shadow: var(--ad-shadow);
+  padding: 18px 22px;
+  margin-bottom: 14px;
+}
+.ad-title-input {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--ad-navy);
+  background: transparent;
+}
+.ad-title-input::placeholder {
+  color: #b4bdc7;
+  font-weight: 700;
+}
+.ad-title-input:focus {
+  outline: 0;
+}
+.ad-title-field:focus-within {
+  border-color: var(--ad-blue);
+}
+
+/* 본문이 화면 대부분을 차지하도록 */
+.ad-body-card {
+  background: var(--ad-surface);
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-radius);
+  box-shadow: var(--ad-shadow);
+  padding: 20px 22px 24px;
+  min-height: 48vh;
+}
+
+/* 기본정보는 아래쪽 보조영역 */
+details.ad-section.ad-meta {
+  margin-top: 16px;
+  box-shadow: none;
+  background: transparent;
+}
+details.ad-section.ad-meta > summary {
+  background: var(--ad-surface);
+  border-radius: var(--ad-radius);
+}
+details.ad-section.ad-meta[open] > summary {
+  border-radius: var(--ad-radius) var(--ad-radius) 0 0;
+}
+details.ad-section.ad-meta > .body {
+  background: var(--ad-surface);
+  border-radius: 0 0 var(--ad-radius) var(--ad-radius);
+}
+.ad-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 18px;
+}
+.ad-meta-grid .ad-field {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .ad-title-field {
+    padding: 14px 16px;
+  }
+  .ad-title-input {
+    font-size: 1.3rem;
+  }
+  .ad-body-card {
+    padding: 16px 14px 20px;
   }
 }

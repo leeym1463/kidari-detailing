@@ -121,13 +121,17 @@ import '../../../styles/global.css';
         <dl class="case-fact-grid" id="pv-facts"></dl>
 
         <div class="prose">
-          <h2>시공 전 상태</h2>
-          <p id="pv-before"></p>
+          <section id="pv-before-wrap" hidden>
+            <h2>시공 전 상태</h2>
+            <p id="pv-before"></p>
+          </section>
 
-          <h2>진행한 작업</h2>
-          <ul id="pv-work"></ul>
+          <section id="pv-work-wrap" hidden>
+            <h2>진행한 작업</h2>
+            <ul id="pv-work"></ul>
+          </section>
 
-          <h2>상세 내용</h2>
+          <h2 id="pv-body-head" hidden>상세 내용</h2>
           <div id="pv-body"></div>
         </div>
       </div>
@@ -182,8 +186,9 @@ import '../../../styles/global.css';
     document.getElementById('pv-category')!.textContent = row.category;
     document.getElementById('pv-tag')!.textContent = row.category;
     document.getElementById('pv-title')!.textContent = row.title || '제목 없음';
-    document.getElementById('pv-summary')!.textContent =
-      row.summary || '요약을 입력하면 이 자리에 보입니다.';
+    const summaryNode = document.getElementById('pv-summary') as HTMLElement;
+    if (row.summary?.trim()) summaryNode.textContent = row.summary;
+    else summaryNode.hidden = true;
 
     // 공개 페이지와 같은 규칙: 외형복원·판금도색은 차종을 표시하지 않습니다.
     const facts: { label: string; value: string }[] = [];
@@ -202,14 +207,24 @@ import '../../../styles/global.css';
       )
       .join('');
 
-    document.getElementById('pv-before')!.textContent =
-      row.before_condition || '입고상태를 입력하면 이 자리에 보입니다.';
+    // 작성 화면에서 더는 입력받지 않는 항목들입니다.
+    // 예전에 입력해 둔 값이 있을 때만 공개 페이지처럼 보여줍니다.
+    const before = (row.before_condition ?? '').trim();
+    const work = (row.work_performed ?? []).filter((w) => w.trim());
 
-    const work = row.work_performed ?? [];
-    document.getElementById('pv-work')!.innerHTML =
-      work.length > 0
-        ? work.map((w) => `<li>${escapeHtml(w)}</li>`).join('')
-        : '<li>작업내용을 한 줄에 하나씩 입력하면 이 자리에 보입니다.</li>';
+    if (before) {
+      document.getElementById('pv-before')!.textContent = before;
+      (document.getElementById('pv-before-wrap') as HTMLElement).hidden = false;
+    }
+    if (work.length > 0) {
+      document.getElementById('pv-work')!.innerHTML = work
+        .map((w) => `<li>${escapeHtml(w)}</li>`)
+        .join('');
+      (document.getElementById('pv-work-wrap') as HTMLElement).hidden = false;
+    }
+    // 위에 다른 꼭지가 있을 때만 "상세 내용" 제목을 붙입니다.
+    (document.getElementById('pv-body-head') as HTMLElement).hidden =
+      !before && work.length === 0;
 
     document.getElementById('pv-body')!.innerHTML = blocksToHtml(blocks, (p) => urls.get(p));
 
