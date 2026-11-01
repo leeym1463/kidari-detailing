@@ -1057,3 +1057,20 @@ h1, h2, h3, h4 {
   border-color: var(--color-accent);
   color: var(--color-accent);
 }
+
+/* ---------- 홈 히어로 배경 ----------
+   화면 폭에 따라 가로/세로 사진을 바꿔 끼웁니다.
+   휴대폰은 화면이 세로로 길어 가로 사진을 넣으면 좌우가 크게 잘립니다. */
+.hero-home {
+  background-image:
+    linear-gradient(180deg, rgba(6, 7, 8, 0.5) 0%, rgba(8, 9, 11, 0.9) 82%),
+    url('/images/hero-polish.jpg');
+}
+
+@media (max-width: 767px) {
+  .hero-home {
+    background-image:
+      linear-gradient(180deg, rgba(6, 7, 8, 0.45) 0%, rgba(8, 9, 11, 0.9) 85%),
+      url('/images/hero-polish-mobile.jpg');
+  }
+}
