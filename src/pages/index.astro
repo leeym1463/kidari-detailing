@@ -57,7 +57,9 @@ const serviceTiles = [
         <ul class="hero-facts">
           <li class="hero-fact-accent">✦ 광택 전문 15년</li>
           <li>📍 {business.fullAddressText}</li>
-          <li>📞 {business.telephoneDisplay}</li>
+          <!-- 휴대폰이 전화번호를 멋대로 링크로 바꾸면 기본 링크 색이 입혀져 어두운 배지 위에서
+               보이지 않습니다. 직접 전화 링크로 만들어 색을 고정하고, 눌러서 바로 걸 수 있게 합니다. -->
+          <li>📞 <a href={business.telephoneHref}>{business.telephoneDisplay}</a></li>
           <li>🕒 {business.openingHours[0].opens} ~ {business.openingHours[0].closes} · {business.closedNote}</li>
         </ul>
         <div class="cta-row">

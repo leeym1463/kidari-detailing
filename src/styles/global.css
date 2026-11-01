@@ -1074,3 +1074,15 @@ h1, h2, h3, h4 {
       url('/images/hero-polish-mobile.jpg');
   }
 }
+
+/* 히어로 안내 배지 속 링크.
+   휴대폰이 전화번호·주소를 자동으로 링크로 바꿔도 배지 글자색을 그대로 유지합니다. */
+.hero-facts a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hero-facts a:hover,
+.hero-facts a:focus-visible {
+  text-decoration: underline;
+}
