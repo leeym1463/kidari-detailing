@@ -32,6 +32,13 @@ export class BlockEditor {
     this.hooks = hooks;
     this.root.addEventListener('click', (e) => void this.onClick(e));
     this.root.addEventListener('input', (e) => this.onInput(e));
+
+    // 끌어서 순서 바꾸기. 위로/아래로 버튼은 그대로 두어
+    // 키보드나 브라우저 AI 로도 똑같이 옮길 수 있게 합니다.
+    this.root.addEventListener('dragstart', (e) => this.onDragStart(e as DragEvent));
+    this.root.addEventListener('dragover', (e) => this.onDragOver(e as DragEvent));
+    this.root.addEventListener('drop', (e) => this.onDrop(e as DragEvent));
+    this.root.addEventListener('dragend', () => this.clearDragMarks());
   }
 
   setBlocks(blocks: Block[]): void {
@@ -97,7 +104,12 @@ export class BlockEditor {
         <button type="button" class="danger" data-act="remove" data-i="${index}" aria-label="${kind} 삭제">삭제</button>
       </span>`;
 
-    const head = `<div class="kd-admin-block-head"><span class="kd-admin-block-kind">${kind}</span>${tools}</div>`;
+    // 끌어서 옮기는 손잡이. 버튼이 아니라 손잡이라서 초점을 받지 않습니다
+    // (키보드·브라우저 AI 는 아래 위로/아래로 버튼을 그대로 쓰면 됩니다).
+    const handle =
+      `<span class="kd-admin-block-drag" draggable="true" data-drag="${index}" aria-hidden="true" title="끌어서 순서 바꾸기">≡ 이동</span>`;
+
+    const head = `<div class="kd-admin-block-head"><span class="kd-admin-block-kind">${kind}</span>${handle}${tools}</div>`;
 
     let body = '';
 
@@ -151,6 +163,10 @@ export class BlockEditor {
                   (it, n) => `<div class="kd-admin-slot">
                     <span class="slot-name">${n + 1}번째</span>
                     ${this.frame(it.path, `${n + 1}번째 사진`)}
+                    <label class="kd-admin-label kd-admin-slot-label" for="alt-${index}-${n}">사진 설명</label>
+                    <input id="alt-${index}-${n}" type="text" data-field="item-alt" data-i="${index}" data-n="${n}"
+                      aria-label="${n + 1}번째 사진 설명" placeholder="예) 보닛 스월마크"
+                      value="${escapeHtml(it.alt ?? '')}" />
                     <button type="button" class="kd-admin-btn kd-admin-btn-sm kd-admin-btn-danger" data-act="group-remove" data-i="${index}" data-n="${n}" aria-label="${n + 1}번째 사진 빼기">빼기</button>
                   </div>`
                 )
@@ -168,18 +184,21 @@ export class BlockEditor {
 
       case 'beforeAfter':
         body = `
+          <p class="kd-admin-hint" style="margin:0 0 10px;">
+            왼쪽이 시공 전, 오른쪽이 시공 후입니다. 두 장을 모두 골라야 게시할 수 있습니다.
+          </p>
           <div class="kd-admin-slot-row">
-            <div class="kd-admin-slot">
-              <span class="slot-name">Before 사진</span>
-              ${this.frame(block.before, 'Before 사진')}
-              <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-before" data-i="${index}" aria-label="Before 사진 고르기">
+            <div class="kd-admin-slot${block.before ? '' : ' is-missing'}">
+              <span class="slot-name">① 시공 전 (Before)</span>
+              ${this.frame(block.before, '시공 전 사진')}
+              <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-before" data-i="${index}" aria-label="시공 전 Before 사진 고르기">
                 ${block.before ? '바꾸기' : '고르기'}
               </button>
             </div>
-            <div class="kd-admin-slot">
-              <span class="slot-name">After 사진</span>
-              ${this.frame(block.after, 'After 사진')}
-              <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-after" data-i="${index}" aria-label="After 사진 고르기">
+            <div class="kd-admin-slot${block.after ? '' : ' is-missing'}">
+              <span class="slot-name">② 시공 후 (After)</span>
+              ${this.frame(block.after, '시공 후 사진')}
+              <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-after" data-i="${index}" aria-label="시공 후 After 사진 고르기">
                 ${block.after ? '바꾸기' : '고르기'}
               </button>
             </div>
@@ -214,6 +233,9 @@ export class BlockEditor {
       block.text = node.value;
     } else if (field === 'caption' && (block.type === 'image' || block.type === 'beforeAfter')) {
       block.caption = node.value;
+    } else if (field === 'item-alt' && block.type === 'imageGroup') {
+      const item = block.items?.[Number(node.dataset.n)];
+      if (item) item.alt = node.value;
     }
     this.hooks.onChange();
   }
@@ -332,6 +354,65 @@ export class BlockEditor {
     const field = this.root.querySelector<HTMLElement>(`#blk-${this.blocks.length - 1}`);
     field?.focus();
     field?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+
+  // -----------------------------------------------------------------
+  // 끌어서 순서 바꾸기
+  // -----------------------------------------------------------------
+
+  private dragFrom: number | null = null;
+
+  private onDragStart(event: DragEvent): void {
+    const handle = (event.target as HTMLElement)?.closest<HTMLElement>('[data-drag]');
+    if (!handle) return;
+    this.dragFrom = Number(handle.dataset.drag);
+    event.dataTransfer?.setData('text/plain', String(this.dragFrom));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    handle.closest('.kd-admin-block')?.classList.add('is-dragging');
+  }
+
+  private onDragOver(event: DragEvent): void {
+    if (this.dragFrom === null) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+
+    const over = (event.target as HTMLElement)?.closest<HTMLElement>('.kd-admin-block');
+    this.clearDropMarks();
+    if (!over) return;
+    const rect = over.getBoundingClientRect();
+    over.classList.add(event.clientY > rect.top + rect.height / 2 ? 'drop-after' : 'drop-before');
+  }
+
+  private onDrop(event: DragEvent): void {
+    const from = this.dragFrom;
+    this.dragFrom = null;
+    if (from === null) return;
+    event.preventDefault();
+
+    const over = (event.target as HTMLElement)?.closest<HTMLElement>('.kd-admin-block');
+    this.clearDragMarks();
+    if (!over) return;
+
+    const rect = over.getBoundingClientRect();
+    let to = Number(over.dataset.i);
+    if (event.clientY > rect.top + rect.height / 2) to += 1;
+    if (to === from || to === from + 1) return; // 제자리
+
+    const [moved] = this.blocks.splice(from, 1);
+    this.blocks.splice(to > from ? to - 1 : to, 0, moved);
+    this.commit();
+  }
+
+  private clearDropMarks(): void {
+    for (const n of this.root.querySelectorAll('.drop-before, .drop-after')) {
+      n.classList.remove('drop-before', 'drop-after');
+    }
+  }
+
+  private clearDragMarks(): void {
+    this.dragFrom = null;
+    this.clearDropMarks();
+    for (const n of this.root.querySelectorAll('.is-dragging')) n.classList.remove('is-dragging');
   }
 
   private move(index: number, delta: number): void {

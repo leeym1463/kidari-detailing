@@ -107,13 +107,23 @@ export function friendlyError(raw: unknown): string {
   if (msg.includes('payload too large') || msg.includes('entity too large')) {
     return '파일이 너무 큽니다. 사진을 줄여서 다시 올려주세요.';
   }
+  // 요청이 서버에 닿지 못한 경우.
+  //
+  // 브라우저는 "인터넷이 끊겼다"와 "서버가 응답하지 않는다"를 똑같은 오류로 돌려줍니다.
+  // 둘은 대처법이 전혀 다르므로 navigator.onLine 으로 갈라서 안내합니다.
+  // (2026-11, Supabase 무료 플랜이 일시중지됐을 때 "인터넷 연결을 확인하세요"가 떠서
+  //  원인을 짐작하기 어려웠던 일이 있었습니다)
   if (
     msg.includes('failed to fetch') ||
     msg.includes('network') ||
     msg.includes('load failed') ||
     msg.includes('timeout')
   ) {
-    return '인터넷 연결을 확인해주세요.';
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    return offline
+      ? '인터넷 연결이 끊겼습니다. 연결을 확인한 뒤 다시 시도해주세요.'
+      : '서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.\n' +
+          '계속 같은 화면이면 Supabase 프로젝트가 일시중지되었는지 확인해주세요.';
   }
   return '문제가 생겨 처리하지 못했습니다. 잠시 후 다시 시도해주세요.';
 }

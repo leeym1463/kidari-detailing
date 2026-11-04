@@ -142,3 +142,100 @@ export function firstPhotoPath(blocks: Block[]): string | null {
   }
   return null;
 }
+
+// ---------------------------------------------------------------------
+// 본문에서 값 뽑아내기 — 게시 전 검사와 Phase 2B 게시에서 함께 씁니다.
+// ---------------------------------------------------------------------
+
+/** 꾸밈 기호(**굵게**, [글자](주소))를 걷어낸 맨 글자. */
+export function plainText(markdownish: string): string {
+  return String(markdownish ?? '')
+    .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .trim();
+}
+
+/** 본문 텍스트를 모두 이어붙인 글자 수. "너무 짧은 글" 판정에 씁니다. */
+export function bodyTextLength(blocks: Block[]): number {
+  return blocks
+    .filter((b): b is ParagraphBlock | HeadingBlock => b.type === 'paragraph' || b.type === 'heading')
+    .map((b) => plainText(b.text))
+    .join('')
+    .replace(/\s+/g, '').length;
+}
+
+/** 요약 초안으로 쓸 첫 번째 본문 문단. 없으면 빈 문자열. */
+export function firstParagraphText(blocks: Block[]): string {
+  for (const b of blocks) {
+    if (b.type !== 'paragraph') continue;
+    const text = plainText(b.text);
+    if (text) return text;
+  }
+  return '';
+}
+
+/** 요약 초안 — 첫 문단을 한두 문장으로 줄입니다. */
+export function suggestSummary(blocks: Block[], limit = 120): string {
+  const text = firstParagraphText(blocks).replace(/\s+/g, ' ');
+  if (!text) return '';
+  if (text.length <= limit) return text;
+  // 문장 끝에서 자르면 자연스럽습니다.
+  const cut = text.slice(0, limit);
+  const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('다. '), cut.lastIndexOf('요. '));
+  return (stop > limit * 0.5 ? cut.slice(0, stop + 1) : cut.trimEnd() + '…').trim();
+}
+
+/** 내용이 비어 있는 블록. 게시 전 검사에서 걸러냅니다. */
+export function emptyBlocks(blocks: Block[]): { index: number; type: BlockType }[] {
+  const out: { index: number; type: BlockType }[] = [];
+  blocks.forEach((b, index) => {
+    const empty =
+      (b.type === 'paragraph' && !plainText(b.text)) ||
+      (b.type === 'heading' && !plainText(b.text)) ||
+      (b.type === 'image' && !b.path) ||
+      (b.type === 'imageGroup' && (b.items ?? []).filter((i) => i.path).length === 0);
+    if (empty) out.push({ index, type: b.type });
+  });
+  return out;
+}
+
+/** Before / After 가 한쪽만 채워진 블록. */
+export function incompleteBeforeAfter(blocks: Block[]): number[] {
+  const out: number[] = [];
+  blocks.forEach((b, index) => {
+    if (b.type !== 'beforeAfter') return;
+    if (!b.before || !b.after) out.push(index);
+  });
+  return out;
+}
+
+/** 설명(alt)이 비어 있는 사진 수. 검색·접근성에 쓰입니다. */
+export function photosMissingAlt(blocks: Block[]): number {
+  let n = 0;
+  for (const b of blocks) {
+    if (b.type === 'image' && b.path && !(b.alt ?? b.caption ?? '').trim()) n += 1;
+    if (b.type === 'imageGroup') {
+      for (const item of b.items ?? []) {
+        if (item.path && !(item.alt ?? '').trim()) n += 1;
+      }
+    }
+  }
+  return n;
+}
+
+/**
+ * Before / After 블록을 공개 페이지 frontmatter 형식으로 뽑습니다.
+ * 공개 사이트의 드래그 비교 슬라이더(BeforeAfterSlider)가 이 구조를 씁니다.
+ * Phase 2B 게시에서 사진 경로를 저장소 파일명으로 바꿔 넣게 됩니다.
+ */
+export function extractBeforeAfterPairs(
+  blocks: Block[]
+): { before: string; after: string; caption?: string }[] {
+  return blocks
+    .filter((b): b is BeforeAfterBlock => b.type === 'beforeAfter' && Boolean(b.before && b.after))
+    .map((b) => ({
+      before: b.before,
+      after: b.after,
+      ...(b.caption?.trim() ? { caption: b.caption.trim() } : {}),
+    }));
+}

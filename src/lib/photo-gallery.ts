@@ -80,8 +80,36 @@ export class PhotoGallery {
 
   clearSelection(): void {
     this.picked = [];
-    this.render();
+    this.paintSelection();
     this.opts.onSelectionChange?.([]);
+  }
+
+  /**
+   * 고른 표시만 바꿔 그립니다.
+   *
+   * 전체를 다시 그리면 카드가 통째로 교체돼, 브라우저 AI 가 기억해 둔
+   * 버튼을 다시 누를 때 실패합니다. 그래서 선택 상태만 손봅니다.
+   */
+  private paintSelection(): void {
+    for (const card of this.opts.grid.querySelectorAll<HTMLElement>('.kd-admin-photo-card')) {
+      const path = card.dataset.path ?? '';
+      const at = this.picked.indexOf(path);
+      const isPicked = at >= 0;
+
+      card.classList.toggle('is-picked', isPicked);
+
+      const order = card.querySelector<HTMLElement>('.kd-admin-pick-order');
+      if (order) {
+        order.textContent = isPicked ? `${at + 1}번째` : '';
+        order.classList.toggle('kd-admin-hide', !isPicked);
+      }
+
+      const thumb = card.querySelector<HTMLButtonElement>('.kd-admin-photo-thumb');
+      if (thumb && this.opts.selectable) {
+        thumb.setAttribute('aria-pressed', String(isPicked));
+        thumb.setAttribute('aria-label', isPicked ? '선택 해제' : '이 사진 선택');
+      }
+    }
   }
 
   thumbUrl(path: string): string | undefined {
@@ -137,7 +165,7 @@ export class PhotoGallery {
     ${thumb}
   </button>
   <figcaption class="kd-admin-photo-body">
-    <span>${badge}${isPicked ? ` <span class="kd-admin-badge kd-admin-badge-used">${pickIndex + 1}번째</span>` : ''}</span>
+    <span>${badge} <span class="kd-admin-badge kd-admin-badge-used kd-admin-pick-order${isPicked ? '' : ' kd-admin-hide'}">${isPicked ? pickIndex + 1 + '번째' : ''}</span></span>
     <span class="kd-admin-photo-meta">
       ${formatDate(p.created_at)}${size ? ' · ' + size : ''}${bytes ? ' · ' + bytes : ''}<br />
       ${cleanupNote}
@@ -189,7 +217,7 @@ export class PhotoGallery {
     } else {
       this.picked = [path];
     }
-    this.render();
+    this.paintSelection();
     this.opts.onSelectionChange?.(this.selected);
   }
 

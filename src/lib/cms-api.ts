@@ -27,6 +27,8 @@ export interface NewCaseInput {
 export type CasePatch = Partial<
   Pick<
     CaseRow,
+    // slug(공개 주소)은 최초 게시 전까지만 바꿀 수 있습니다. 잠금은 화면에서 처리합니다.
+    | 'slug'
     | 'title'
     | 'category'
     | 'case_date'

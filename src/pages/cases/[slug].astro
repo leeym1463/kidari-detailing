@@ -18,7 +18,13 @@ const { data } = entry;
 const { Content } = await render(entry);
 
 const title = `${data.title} | 시공사례 - 키다리광택 (춘천)`;
-const description = data.summary;
+
+// summary 등은 선택 항목입니다. 값이 없으면 해당 영역을 감추고,
+// 메타 설명처럼 비워둘 수 없는 곳에는 제목으로 대신합니다.
+const summary = data.summary?.trim() ?? '';
+const description = summary || `${data.title} - 키다리광택 춘천 시공사례`;
+const hasBeforeCondition = Boolean(data.beforeCondition?.trim());
+const hasWorkPerformed = data.workPerformed.length > 0;
 const path = `/cases/${entry.slug}`;
 const serviceHref = serviceCategoryHref[data.category];
 
@@ -27,7 +33,7 @@ if (data.category !== '외형복원·판금도색') facts.push({ label: '차종'
 if (data.priceNote) facts.push({ label: '가격', value: data.priceNote });
 
 const schema = [
-  blogPostingSchema({ title: data.title, description: data.summary, path, datePublished: data.date }),
+  blogPostingSchema({ title: data.title, description, path, datePublished: data.date }),
   breadcrumbSchema([
     { name: '홈', path: '/' },
     { name: '시공사례', path: '/cases' },
@@ -44,7 +50,7 @@ const schema = [
       </p>
       <span class="case-tag">{data.category}</span>
       <h1 style="margin-top:10px;">{data.title}</h1>
-      <p class="lede">{data.summary}</p>
+      {summary && <p class="lede">{summary}</p>}
     </div>
   </section>
 
@@ -70,17 +76,26 @@ const schema = [
     )}
 
     <div class="prose">
-      <h2>시공 전 상태</h2>
-      <p>{data.beforeCondition}</p>
+      {hasBeforeCondition && (
+        <>
+          <h2>시공 전 상태</h2>
+          <p>{data.beforeCondition}</p>
+        </>
+      )}
 
-      <h2>진행한 작업</h2>
-      <ul>
-        {data.workPerformed.map((item) => (
-          <li>{item}</li>
-        ))}
-      </ul>
+      {hasWorkPerformed && (
+        <>
+          <h2>진행한 작업</h2>
+          <ul>
+            {data.workPerformed.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </>
+      )}
 
-      <h2>상세 내용</h2>
+      {/* 위에 다른 꼭지가 있을 때만 "상세 내용" 제목을 붙입니다. */}
+      {(hasBeforeCondition || hasWorkPerformed) && <h2>상세 내용</h2>}
       <Content />
     </div>
 

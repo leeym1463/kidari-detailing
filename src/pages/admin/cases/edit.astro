@@ -8,10 +8,19 @@
 // 화면 구성은 네이버 블로그 글쓰기를 따릅니다.
 //   위:   제목
 //   가운데: 본문 (화면 대부분)
-//   아래: 기본정보 — 기본적으로 접혀 있음
+//   아래: 기본정보 / 게시 전 점검 — 기본적으로 접혀 있음
 //   오른쪽: 사진함 (넓은 화면 고정 / 좁은 화면은 전체 덮개)
+import { getCollection } from 'astro:content';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { CASE_CATEGORIES } from '../../../lib/cms-types';
+
+// 이미 공개된 글의 주소·제목. 중복 검사에 씁니다.
+// 정적 페이지라 빌드 시점 기준이며, CMS 로 쓴 글은 화면에서 따로 확인합니다.
+const publishedCases = await getCollection('cases');
+const existing = {
+  slugs: publishedCases.map((entry) => entry.slug),
+  titles: publishedCases.map((entry) => entry.data.title),
+};
 ---
 
 <AdminLayout title="시공사례 작성" nav="cases">
@@ -19,7 +28,12 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
     <div class="inner">
       <span class="title" id="bar-title">새 시공사례</span>
       <span class="kd-admin-save-state" id="save-state" role="status" aria-live="polite"></span>
-      <button type="button" id="btn-save" class="kd-admin-btn kd-admin-btn-primary kd-admin-btn-sm" aria-label="임시저장">
+      <button
+        type="button"
+        id="btn-save"
+        class="kd-admin-btn kd-admin-btn-primary kd-admin-btn-sm"
+        aria-label="임시저장"
+      >
         임시저장
       </button>
       <a id="btn-preview" class="kd-admin-btn kd-admin-btn-sm" href="#" aria-label="미리보기">미리보기</a>
@@ -75,23 +89,119 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
 
             <div class="kd-admin-field">
               <label for="f-vehicle">차량명</label>
-              <input id="f-vehicle" class="kd-admin-input" type="text" maxlength="80" aria-label="차량명"
-                placeholder="예) BMW 740i" />
+              <input
+                id="f-vehicle"
+                class="kd-admin-input"
+                type="text"
+                maxlength="80"
+                aria-label="차량명"
+                placeholder="예) BMW 740i"
+              />
             </div>
 
             <div class="kd-admin-field">
               <label for="f-color">차량 색상</label>
-              <input id="f-color" class="kd-admin-input" type="text" maxlength="40" aria-label="차량 색상"
-                placeholder="예) 알파인 화이트" />
+              <input
+                id="f-color"
+                class="kd-admin-input"
+                type="text"
+                maxlength="40"
+                aria-label="차량 색상"
+                placeholder="예) 알파인 화이트"
+              />
             </div>
           </div>
 
-          <div class="kd-admin-field" style="margin-bottom:0;">
+          <div class="kd-admin-field">
             <label for="f-blog">네이버 블로그 URL</label>
-            <input id="f-blog" class="kd-admin-input" type="url" inputmode="url"
-              aria-label="네이버 블로그 URL" placeholder="https://blog.naver.com/..." />
+            <input
+              id="f-blog"
+              class="kd-admin-input"
+              type="url"
+              inputmode="url"
+              aria-label="네이버 블로그 URL"
+              placeholder="https://blog.naver.com/..."
+            />
             <p class="kd-admin-hint">블로그 글을 옮겨 적었다면 원본 주소를 남겨두세요.</p>
           </div>
+
+          <div class="kd-admin-field" style="margin-bottom:0;">
+            <label for="f-slug">공개 주소</label>
+            <div class="kd-admin-slug-row">
+              <input
+                id="f-slug"
+                class="kd-admin-input"
+                type="text"
+                maxlength="80"
+                aria-label="공개 주소"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button
+                type="button"
+                id="btn-slug-auto"
+                class="kd-admin-btn kd-admin-btn-sm"
+                aria-label="공개 주소 자동으로 만들기"
+              >
+                자동 만들기
+              </button>
+            </div>
+            <p class="kd-admin-slug-preview" id="slug-preview"></p>
+            <p class="kd-admin-hint" id="slug-hint">
+              차량명·작업·작업일로 자동으로 만들어집니다. 게시하기 전까지만 바꿀 수 있습니다.
+            </p>
+          </div>
+        </div>
+      </details>
+
+      <!-- ============ 게시 전 점검 (접힘) ============ -->
+      <details class="kd-admin-section kd-admin-meta" id="publish-section">
+        <summary aria-label="게시 전 점검 펼치기 또는 접기">게시 전 점검</summary>
+        <div class="body">
+          <div class="kd-admin-field">
+            <label for="f-summary">요약</label>
+            <textarea
+              id="f-summary"
+              class="kd-admin-textarea"
+              maxlength="300"
+              aria-label="요약"
+              placeholder="목록과 검색결과에 보이는 1~2문장입니다."
+              style="min-height:88px;"></textarea>
+            <div class="kd-admin-btn-row" style="margin-top:8px;">
+              <button
+                type="button"
+                id="btn-summary-suggest"
+                class="kd-admin-btn kd-admin-btn-sm"
+                aria-label="본문에서 요약 초안 만들기"
+              >
+                본문에서 초안 만들기
+              </button>
+            </div>
+            <p class="kd-admin-hint">
+              글을 쓰는 동안에는 비워두어도 됩니다. 게시할 때만 필요합니다.
+            </p>
+          </div>
+
+          <div class="kd-admin-check-summary" id="check-counts"></div>
+          <ul class="kd-admin-checks" id="check-list" aria-label="게시 전 점검 결과"></ul>
+
+          <div class="kd-admin-btn-row" style="margin-top:16px;">
+            <button type="button" id="btn-recheck" class="kd-admin-btn kd-admin-btn-sm" aria-label="다시 검사">
+              다시 검사
+            </button>
+            <button
+              type="button"
+              id="btn-publish"
+              class="kd-admin-btn kd-admin-btn-primary"
+              aria-label="게시하기"
+              disabled
+            >
+              게시하기
+            </button>
+          </div>
+          <p class="kd-admin-hint" id="publish-note">
+            게시 기능은 다음 단계에서 연결됩니다. 지금은 점검만 할 수 있습니다.
+          </p>
         </div>
       </details>
     </div>
@@ -100,7 +210,11 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
     <aside class="kd-admin-panel kd-admin-hide" id="photo-panel" aria-label="사진함">
       <div class="kd-admin-panel-head">
         <h2 id="panel-title">사진함</h2>
-        <button type="button" id="panel-close" class="kd-admin-btn kd-admin-btn-sm" style="margin-left:auto;"
+        <button
+          type="button"
+          id="panel-close"
+          class="kd-admin-btn kd-admin-btn-sm"
+          style="margin-left:auto;"
           aria-label="사진함 닫기">닫기</button>
       </div>
 
@@ -110,8 +224,14 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
         <label class="kd-admin-btn kd-admin-btn-sm kd-admin-btn-block" for="panel-upload" aria-label="사진 추가">
           사진 추가
         </label>
-        <input id="panel-upload" type="file" accept="image/*" multiple aria-label="올릴 사진 선택"
-          style="position:absolute;width:1px;height:1px;opacity:0;" />
+        <input
+          id="panel-upload"
+          type="file"
+          accept="image/*"
+          multiple
+          aria-label="올릴 사진 선택"
+          style="position:absolute;width:1px;height:1px;opacity:0;"
+        />
         <ul class="kd-admin-progress" id="panel-progress" aria-live="polite"></ul>
 
         <div class="kd-admin-photo-grid" id="panel-grid" style="margin-top:14px;"></div>
@@ -121,13 +241,18 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       </div>
 
       <div class="kd-admin-panel-foot kd-admin-hide" id="panel-foot">
-        <button type="button" id="panel-confirm" class="kd-admin-btn kd-admin-btn-primary kd-admin-btn-sm"
+        <button
+          type="button"
+          id="panel-confirm"
+          class="kd-admin-btn kd-admin-btn-primary kd-admin-btn-sm"
           aria-label="고른 사진 넣기">선택한 사진 넣기</button>
-        <button type="button" id="panel-cancel" class="kd-admin-btn kd-admin-btn-sm"
-          aria-label="사진 고르기 취소">취소</button>
+        <button type="button" id="panel-cancel" class="kd-admin-btn kd-admin-btn-sm" aria-label="사진 고르기 취소"
+          >취소</button>
       </div>
     </aside>
   </div>
+
+  <script type="application/json" id="existing-cases" set:html={JSON.stringify(existing)}></script>
 </AdminLayout>
 
 <script>
@@ -137,14 +262,17 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
   import {
     CASE_CATEGORIES,
     firstPhotoPath,
+    suggestSummary,
     usedPhotoPaths,
     type CaseCategory,
     type CaseRow,
   } from '../../../lib/cms-types';
+  import { buildSlug, makeUnique, validateSlug } from '../../../lib/slug';
+  import { countByLevel, hasBlockingError, runPublishChecks } from '../../../lib/publish-checks';
   import {
-    buildSlug,
     debounce,
     el,
+    escapeHtml,
     friendlyError,
     maybe,
     notice,
@@ -155,12 +283,24 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
 
   const AUTOSAVE_MS = 1500;
 
+  /** 빌드 시점에 심어둔, 이미 공개된 글의 주소·제목 */
+  function readExisting(): { slugs: string[]; titles: string[] } {
+    try {
+      return JSON.parse(document.getElementById('existing-cases')?.textContent ?? '{}');
+    } catch {
+      return { slugs: [], titles: [] };
+    }
+  }
+
+  function formatTime(d: Date): string {
+    return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+  }
+
   (async () => {
     const session = await bootAdmin();
     if (!session) return;
     const { api } = session;
 
-    // id 가 없으면 새 글입니다. 실제 글은 처음 저장할 때 만들어집니다.
     let caseId = new URLSearchParams(location.search).get('id');
     let row: CaseRow | null = null;
 
@@ -177,11 +317,13 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       }
     }
 
+    const isPublished = row?.status === 'published';
+
     // ----------------------------------------------------------------
-    // 입력칸 채우기
+    // 입력칸
     //
-    // 화면에 없는 항목(요약·입고상태·작업내용·작업시간·가격안내)은
-    // 저장할 때도 건드리지 않습니다 — 예전에 입력한 값이 지워지지 않게 하기 위해서입니다.
+    // 화면에 없는 항목(입고상태·작업내용·작업시간·가격안내)은 저장할 때도
+    // 건드리지 않습니다 — 예전에 입력한 값이 지워지지 않게 하기 위해서입니다.
     // ----------------------------------------------------------------
     const F = {
       title: el<HTMLInputElement>('f-title'),
@@ -190,6 +332,8 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       date: el<HTMLInputElement>('f-date'),
       color: el<HTMLInputElement>('f-color'),
       blog: el<HTMLInputElement>('f-blog'),
+      slug: el<HTMLInputElement>('f-slug'),
+      summary: el<HTMLTextAreaElement>('f-summary'),
     };
 
     F.title.value = row?.title ?? '';
@@ -199,6 +343,18 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
     F.date.value = row?.case_date ?? todayISO();
     F.color.value = row?.vehicle_color ?? '';
     F.blog.value = row?.naver_blog_url ?? '';
+    F.slug.value = row?.slug ?? '';
+    F.summary.value = row?.summary ?? '';
+
+    // 게시된 글의 주소는 바꿀 수 없습니다 — 바꾸면 기존 링크가 깨집니다.
+    if (isPublished) {
+      F.slug.readOnly = true;
+      el<HTMLButtonElement>('btn-slug-auto').disabled = true;
+      el('slug-hint').textContent =
+        '이미 게시된 글입니다. 주소를 바꾸면 기존 링크가 깨지므로 잠겨 있습니다.';
+    }
+
+    let lastSavedAt: Date | null = caseId ? new Date(row!.updated_at) : null;
 
     function syncHeader() {
       el('bar-title').textContent = F.title.value.trim() || (caseId ? '제목 없음' : '새 시공사례');
@@ -211,7 +367,16 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
         link.setAttribute('aria-disabled', 'true');
       }
     }
+
+    function syncSlugPreview() {
+      const value = F.slug.value.trim();
+      el('slug-preview').innerHTML = value
+        ? `공개되면 <code>/cases/${escapeHtml(value)}</code> 주소로 열립니다.`
+        : '';
+    }
+
     syncHeader();
+    syncSlugPreview();
 
     // ----------------------------------------------------------------
     // 사진함 패널
@@ -246,6 +411,9 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
     }
 
     function openPanelBrowse() {
+      // 고르기 모드에서 남은 선택을 반드시 지우고 엽니다.
+      gallery.clearSelection();
+      updateConfirmLabel();
       openPanel('browse', '사진함', '글에 넣을 사진을 미리 올려두세요.');
     }
 
@@ -253,6 +421,7 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       const done = pickResolve;
       pickResolve = null;
       gallery.clearSelection();
+      updateConfirmLabel();
       show(panelFoot, false);
       if (wide()) openPanelBrowse();
       else show(panel, false);
@@ -317,31 +486,34 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
     let dirtyWhileSaving = false;
 
     function setState(text: string, kind: '' | 'saving' | 'saved' | 'error') {
-      stateNode.textContent = text;
+      const time = kind === 'saved' && lastSavedAt ? ` · ${formatTime(lastSavedAt)}` : '';
+      stateNode.textContent = text ? text + time : '';
       stateNode.className = 'kd-admin-save-state' + (kind ? ' is-' + kind : '');
     }
 
     function collect() {
       const blocks = editor.getBlocks();
-      return {
-        patch: {
-          title: F.title.value.trim(),
-          category: F.category.value as CaseCategory,
-          case_date: F.date.value || todayISO(),
-          vehicle: F.vehicle.value.trim() || null,
-          vehicle_color: F.color.value.trim() || null,
-          naver_blog_url: F.blog.value.trim() || null,
-          content_blocks: blocks,
-          cover_image: firstPhotoPath(blocks),
-        },
-        used: usedPhotoPaths(blocks),
+      const patch: Record<string, unknown> = {
+        title: F.title.value.trim(),
+        category: F.category.value as CaseCategory,
+        case_date: F.date.value || todayISO(),
+        vehicle: F.vehicle.value.trim() || null,
+        vehicle_color: F.color.value.trim() || null,
+        naver_blog_url: F.blog.value.trim() || null,
+        summary: F.summary.value.trim() || null,
+        content_blocks: blocks,
+        cover_image: firstPhotoPath(blocks),
       };
+      // 게시된 글의 주소는 보내지 않습니다.
+      const slug = F.slug.value.trim();
+      if (!isPublished && slug && validateSlug(slug).ok) patch.slug = slug;
+      return { patch, used: usedPhotoPaths(blocks) };
     }
 
-    /** 아직 아무것도 입력하지 않았으면 빈 글을 만들지 않습니다. */
     function hasContent(): boolean {
       if (F.title.value.trim()) return true;
       if (F.vehicle.value.trim() || F.color.value.trim() || F.blog.value.trim()) return true;
+      if (F.summary.value.trim()) return true;
       return editor.getBlocks().length > 0;
     }
 
@@ -361,27 +533,31 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
 
       try {
         if (!caseId) {
-          // 첫 저장 — 이때 비로소 임시저장 글이 만들어집니다.
           const created = await api.createCase({
-            slug: buildSlug(patch.category, patch.case_date),
-            title: patch.title || '제목 없음',
-            category: patch.category,
-            case_date: patch.case_date,
+            slug: (patch.slug as string) || nextSlug(),
+            title: (patch.title as string) || '제목 없음',
+            category: patch.category as CaseCategory,
+            case_date: patch.case_date as string,
           });
           caseId = created.id;
-          // 새로고침해도 같은 글로 돌아오도록 주소만 조용히 바꿉니다.
+          if (!F.slug.value.trim()) {
+            F.slug.value = created.slug;
+            syncSlugPreview();
+          }
           history.replaceState(null, '', `/admin/cases/edit?id=${encodeURIComponent(caseId)}`);
         }
 
         await api.updateCase(caseId, patch);
         await api.syncCasePhotos(caseId, used);
 
+        lastSavedAt = new Date();
         setState('저장됨', 'saved');
         syncHeader();
         notice(maybe('edit-error'), '');
         if (manual) toast('임시저장했습니다.', 'ok');
         await gallery.refresh();
         editor.refreshThumbs();
+        void runChecks();
       } catch (e) {
         setState('저장하지 못했습니다', 'error');
         notice(maybe('edit-error'), friendlyError(e), 'error');
@@ -401,6 +577,7 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       node.addEventListener('input', () => {
         setState('수정 중…', '');
         if (node === F.title) syncHeader();
+        if (node === F.slug) syncSlugPreview();
         scheduleSave();
       });
     }
@@ -410,7 +587,6 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       void save(true);
     });
 
-    // 미리보기는 글이 만들어진 뒤에만 열 수 있습니다.
     el('btn-preview').addEventListener('click', (event) => {
       if (!caseId) {
         event.preventDefault();
@@ -418,8 +594,130 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       }
     });
 
-    window.addEventListener('beforeunload', () => {
-      scheduleSave.flush();
+    window.addEventListener('beforeunload', () => scheduleSave.flush());
+
+    // ----------------------------------------------------------------
+    // 공개 주소
+    // ----------------------------------------------------------------
+    let otherCases: CaseRow[] = [];
+
+    function takenSlugs(): Set<string> {
+      const taken = new Set(readExisting().slugs);
+      for (const c of otherCases) if (c.id !== caseId) taken.add(c.slug);
+      return taken;
+    }
+
+    function takenTitles(): Set<string> {
+      const taken = new Set(readExisting().titles.map((t) => t.trim()));
+      for (const c of otherCases) if (c.id !== caseId) taken.add((c.title ?? '').trim());
+      return taken;
+    }
+
+    function nextSlug(): string {
+      return makeUnique(
+        buildSlug({
+          vehicle: F.vehicle.value,
+          category: F.category.value as CaseCategory,
+          caseDate: F.date.value || todayISO(),
+        }),
+        takenSlugs()
+      );
+    }
+
+    el('btn-slug-auto').addEventListener('click', () => {
+      if (isPublished) return;
+      F.slug.value = nextSlug();
+      syncSlugPreview();
+      setState('수정 중…', '');
+      scheduleSave();
+      toast('주소를 새로 만들었습니다.', 'ok');
+    });
+
+    // ----------------------------------------------------------------
+    // 요약 초안
+    // ----------------------------------------------------------------
+    el('btn-summary-suggest').addEventListener('click', () => {
+      const draft = suggestSummary(editor.getBlocks());
+      if (!draft) {
+        toast('본문에 글이 없어 초안을 만들 수 없습니다.', 'error');
+        return;
+      }
+      F.summary.value = draft;
+      F.summary.focus();
+      setState('수정 중…', '');
+      scheduleSave();
+      void runChecks();
+      toast('초안을 넣었습니다. 다듬어서 쓰세요.', 'ok');
+    });
+
+    // ----------------------------------------------------------------
+    // 게시 전 점검
+    // ----------------------------------------------------------------
+    async function runChecks(): Promise<void> {
+      try {
+        otherCases = await api.listCases();
+      } catch {
+        /* 못 읽어도 빌드 시점 목록으로 검사합니다 */
+      }
+
+      const blocks = editor.getBlocks();
+      const checks = runPublishChecks({
+        row: {
+          title: F.title.value,
+          summary: F.summary.value,
+          vehicle: F.vehicle.value,
+          slug: F.slug.value.trim(),
+          naver_blog_url: F.blog.value,
+          status: row?.status ?? 'draft',
+        },
+        blocks,
+        takenSlugs: takenSlugs(),
+        takenTitles: takenTitles(),
+      });
+
+      const { errors, warnings } = countByLevel(checks);
+      el('check-counts').innerHTML =
+        errors === 0 && warnings === 0
+          ? '<span class="kd-admin-badge kd-admin-badge-pub">모두 통과</span>'
+          : [
+              errors > 0
+                ? `<span class="kd-admin-badge kd-admin-badge-draft">고쳐야 함 ${errors}</span>`
+                : '',
+              warnings > 0
+                ? `<span class="kd-admin-badge kd-admin-badge-free">확인 권장 ${warnings}</span>`
+                : '',
+            ].join('');
+
+      el('check-list').innerHTML = checks
+        .map((c) => {
+          const kind = c.ok ? 'ok' : c.level === 'error' ? 'error' : 'warn';
+          const mark = c.ok ? '✓' : c.level === 'error' ? '!' : '?';
+          const hint = !c.ok && c.hint ? `<span>${escapeHtml(c.hint)}</span>` : '';
+          return `<li>
+            <span class="kd-admin-check-mark kd-admin-check-${kind}" aria-hidden="true">${mark}</span>
+            <span class="kd-admin-check-body">
+              <strong>${escapeHtml(c.label)}${c.ok ? '' : c.level === 'error' ? ' — 고쳐야 합니다' : ' — 확인해주세요'}</strong>
+              ${hint}
+            </span>
+          </li>`;
+        })
+        .join('');
+
+      // 게시 단추는 Phase 2B 에서 열립니다. 지금은 검사 결과만 반영해 둡니다.
+      const publish = el<HTMLButtonElement>('btn-publish');
+      publish.disabled = true;
+      el('publish-note').textContent = hasBlockingError(checks)
+        ? '고쳐야 할 항목이 남아 있습니다. 게시 기능은 다음 단계에서 연결됩니다.'
+        : '점검을 통과했습니다. 게시 기능은 다음 단계에서 연결됩니다.';
+    }
+
+    el('btn-recheck').addEventListener('click', () => {
+      void runChecks();
+      toast('다시 검사했습니다.', 'ok');
+    });
+
+    el('publish-section').addEventListener('toggle', () => {
+      if ((el('publish-section') as HTMLDetailsElement).open) void runChecks();
     });
 
     // ----------------------------------------------------------------
@@ -432,6 +730,8 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
 
     if (wide()) openPanelBrowse();
     if (!caseId) F.title.focus();
+
+    void runChecks();
   })().catch((e) => {
     notice(maybe('edit-error'), friendlyError(e), 'error');
     console.error('[작성 화면]', e);

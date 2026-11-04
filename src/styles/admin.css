@@ -357,6 +357,8 @@ img {
    --------------------------------------------------------------- */
 
 .kd-admin-notice {
+  /* 안내문에 줄바꿈이 들어가면 그대로 보여줍니다. */
+  white-space: pre-line;
   border-radius: var(--kd-admin-radius-sm);
   padding: 13px 15px;
   font-size: 0.93rem;
@@ -1330,4 +1332,140 @@ details.kd-admin-section.kd-admin-meta > .body {
   .kd-admin-body-card {
     padding: 16px 14px 20px;
   }
+}
+
+/* ---------------------------------------------------------------
+   블록 끌어서 옮기기
+   --------------------------------------------------------------- */
+
+.kd-admin-block-drag {
+  cursor: grab;
+  user-select: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--kd-admin-muted);
+  background: #f2f5f9;
+  border: 1px solid var(--kd-admin-line);
+  border-radius: 7px;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+.kd-admin-block-drag:active {
+  cursor: grabbing;
+}
+.kd-admin-block.is-dragging {
+  opacity: 0.45;
+}
+.kd-admin-block.drop-before {
+  box-shadow: 0 -3px 0 0 var(--kd-admin-blue);
+}
+.kd-admin-block.drop-after {
+  box-shadow: 0 3px 0 0 var(--kd-admin-blue);
+}
+
+/* 사진 자리 안의 설명 입력칸 */
+.kd-admin-slot-label {
+  font-size: 0.74rem;
+  margin-bottom: 4px;
+  color: var(--kd-admin-muted);
+  font-weight: 600;
+}
+.kd-admin-slot input[type='text'] {
+  min-height: 36px;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+.kd-admin-slot.is-missing {
+  border-color: #e9b9b9;
+  background: var(--kd-admin-danger-soft);
+}
+
+/* ---------------------------------------------------------------
+   게시 전 점검
+   --------------------------------------------------------------- */
+
+.kd-admin-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.kd-admin-checks li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 11px 0;
+  border-top: 1px solid var(--kd-admin-line);
+}
+.kd-admin-checks li:first-child {
+  border-top: 0;
+}
+.kd-admin-check-mark {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-top: 1px;
+}
+.kd-admin-check-ok {
+  background: var(--kd-admin-ok-soft);
+  color: var(--kd-admin-ok);
+}
+.kd-admin-check-error {
+  background: var(--kd-admin-danger-soft);
+  color: var(--kd-admin-danger);
+}
+.kd-admin-check-warn {
+  background: var(--kd-admin-warn-soft);
+  color: var(--kd-admin-warn);
+}
+.kd-admin-check-body {
+  min-width: 0;
+}
+.kd-admin-check-body strong {
+  display: block;
+  font-size: 0.93rem;
+  color: var(--kd-admin-navy);
+}
+.kd-admin-check-body span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--kd-admin-muted);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.kd-admin-check-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+/* 주소(slug) 입력칸 */
+.kd-admin-slug-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.kd-admin-slug-row input {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+}
+.kd-admin-slug-preview {
+  font-size: 0.82rem;
+  color: var(--kd-admin-muted);
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+}
+.kd-admin-slug-preview code {
+  background: #eef1f5;
+  border-radius: 4px;
+  padding: 1px 5px;
 }
