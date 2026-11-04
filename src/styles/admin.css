@@ -1,0 +1,1676 @@
+/* =====================================================================
+   키다리광택 관리자 화면 전용 스타일
+
+   공개 홈페이지에는 로드되지 않습니다 (AdminLayout 에서만 import).
+   공개 사이트의 global.css 와 토큰 이름이 겹치지 않도록 --kd-admin- 접두사를 씁니다.
+
+   디자인 방향
+     · 흰색 중심 / KIDARI 네이비 / 절제된 블루 강조
+     · 넓은 여백, 큰 버튼
+     · 네이버 블로그 글쓰기처럼 친숙하게
+     · 개발툴 느낌 금지
+   ===================================================================== */
+
+:root {
+  --kd-admin-navy: #0f2440;
+  --kd-admin-navy-soft: #1b3a5e;
+  --kd-admin-blue: #0a6ed1;
+  --kd-admin-blue-dark: #085bad;
+  --kd-admin-blue-soft: #eaf3fc;
+  --kd-admin-bg: #f6f8fa;
+  --kd-admin-surface: #ffffff;
+  --kd-admin-line: #dfe5ec;
+  --kd-admin-line-strong: #c7d1dc;
+  --kd-admin-text: #16202b;
+  --kd-admin-muted: #68737f;
+  --kd-admin-danger: #c62828;
+  --kd-admin-danger-soft: #fdecec;
+  --kd-admin-ok: #1b7f4b;
+  --kd-admin-ok-soft: #e8f6ee;
+  --kd-admin-warn: #8a5a00;
+  --kd-admin-warn-soft: #fff6e0;
+  --kd-admin-radius: 12px;
+  --kd-admin-radius-sm: 8px;
+  --kd-admin-shadow: 0 1px 2px rgba(16, 36, 64, 0.06), 0 8px 24px rgba(16, 36, 64, 0.06);
+  --kd-admin-font: Geist, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--kd-admin-bg);
+  color: var(--kd-admin-text);
+  font-family: var(--kd-admin-font);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------------------------------------------------------------
+   공통 요소
+   --------------------------------------------------------------- */
+
+h1,
+h2,
+h3 {
+  color: var(--kd-admin-navy);
+  line-height: 1.35;
+  margin: 0;
+  font-weight: 700;
+}
+h1 {
+  font-size: 1.5rem;
+}
+h2 {
+  font-size: 1.15rem;
+}
+h3 {
+  font-size: 1rem;
+}
+
+a {
+  color: var(--kd-admin-blue);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.kd-admin-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.kd-admin-wrap-narrow {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.kd-admin-muted {
+  color: var(--kd-admin-muted);
+}
+.kd-admin-small {
+  font-size: 0.88rem;
+}
+.kd-admin-center {
+  text-align: center;
+}
+.kd-admin-hide {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------
+   헤더
+   --------------------------------------------------------------- */
+
+.kd-admin-header {
+  background: var(--kd-admin-navy);
+  color: #fff;
+}
+.kd-admin-header .kd-admin-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 60px;
+  flex-wrap: wrap;
+}
+.kd-admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.kd-admin-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--kd-admin-blue);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.kd-admin-brand small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #a9bdd4;
+  letter-spacing: 0.02em;
+}
+.kd-admin-header-spacer {
+  flex: 1 1 auto;
+}
+
+.kd-admin-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.kd-admin-nav a {
+  color: #d5e2f0;
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.kd-admin-nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.kd-admin-nav a[aria-current="page"] {
+  background: var(--kd-admin-blue);
+  color: #fff;
+}
+
+.kd-admin-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: #a9bdd4;
+}
+
+/* ---------------------------------------------------------------
+   본문 영역
+   --------------------------------------------------------------- */
+
+.kd-admin-main {
+  padding: 28px 0 80px;
+}
+
+.kd-admin-page-head {
+  margin-bottom: 22px;
+}
+.kd-admin-page-head p {
+  margin: 6px 0 0;
+  color: var(--kd-admin-muted);
+}
+
+.kd-admin-card {
+  background: var(--kd-admin-surface);
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius);
+  padding: 22px;
+  box-shadow: var(--kd-admin-shadow);
+}
+.kd-admin-card + .kd-admin-card {
+  margin-top: 18px;
+}
+.kd-admin-card > h2:first-child {
+  margin-bottom: 14px;
+}
+
+/* ---------------------------------------------------------------
+   버튼 — 비개발자용이므로 크고 명확하게
+   --------------------------------------------------------------- */
+
+.kd-admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--kd-admin-line-strong);
+  border-radius: var(--kd-admin-radius-sm);
+  background: var(--kd-admin-surface);
+  color: var(--kd-admin-navy);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+}
+.kd-admin-btn:hover {
+  background: #f2f5f9;
+}
+.kd-admin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kd-admin-btn-primary {
+  background: var(--kd-admin-blue);
+  border-color: var(--kd-admin-blue);
+  color: #fff;
+}
+.kd-admin-btn-primary:hover {
+  background: var(--kd-admin-blue-dark);
+  border-color: var(--kd-admin-blue-dark);
+}
+
+.kd-admin-btn-danger {
+  background: var(--kd-admin-surface);
+  border-color: #e9b9b9;
+  color: var(--kd-admin-danger);
+}
+.kd-admin-btn-danger:hover {
+  background: var(--kd-admin-danger-soft);
+}
+
+.kd-admin-btn-block {
+  width: 100%;
+}
+
+.kd-admin-btn-sm {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.88rem;
+}
+
+.kd-admin-btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------
+   폼
+   --------------------------------------------------------------- */
+
+.kd-admin-field {
+  margin-bottom: 18px;
+}
+
+.kd-admin-field label,
+.kd-admin-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--kd-admin-navy);
+}
+.kd-admin-field .kd-admin-hint {
+  margin: 6px 0 0;
+  font-size: 0.84rem;
+  color: var(--kd-admin-muted);
+}
+.kd-admin-req::after {
+  content: " *";
+  color: var(--kd-admin-danger);
+}
+
+.kd-admin-input,
+.kd-admin-select,
+.kd-admin-textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 1px solid var(--kd-admin-line-strong);
+  border-radius: var(--kd-admin-radius-sm);
+  background: var(--kd-admin-surface);
+  color: var(--kd-admin-text);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.kd-admin-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+.kd-admin-input:focus,
+.kd-admin-select:focus,
+.kd-admin-textarea:focus {
+  outline: 2px solid var(--kd-admin-blue);
+  outline-offset: 1px;
+  border-color: var(--kd-admin-blue);
+}
+
+.kd-admin-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--kd-admin-text);
+  cursor: pointer;
+}
+.kd-admin-check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--kd-admin-blue);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------
+   알림 / 상태 표시
+   --------------------------------------------------------------- */
+
+.kd-admin-notice {
+  /* 안내문에 줄바꿈이 들어가면 그대로 보여줍니다. */
+  white-space: pre-line;
+  border-radius: var(--kd-admin-radius-sm);
+  padding: 13px 15px;
+  font-size: 0.93rem;
+  margin: 0 0 16px;
+  border: 1px solid transparent;
+}
+.kd-admin-notice-error {
+  background: var(--kd-admin-danger-soft);
+  border-color: #f0c4c4;
+  color: #8c1d1d;
+}
+.kd-admin-notice-ok {
+  background: var(--kd-admin-ok-soft);
+  border-color: #bfe3cd;
+  color: #15603a;
+}
+.kd-admin-notice-info {
+  background: var(--kd-admin-blue-soft);
+  border-color: #cfe4f8;
+  color: #0b4e92;
+}
+.kd-admin-notice-warn {
+  background: var(--kd-admin-warn-soft);
+  border-color: #efdcae;
+  color: var(--kd-admin-warn);
+}
+
+.kd-admin-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.kd-admin-badge-draft {
+  background: var(--kd-admin-warn-soft);
+  color: var(--kd-admin-warn);
+}
+.kd-admin-badge-pub {
+  background: var(--kd-admin-ok-soft);
+  color: var(--kd-admin-ok);
+}
+.kd-admin-badge-free {
+  background: #eef1f5;
+  color: var(--kd-admin-muted);
+}
+.kd-admin-badge-used {
+  background: var(--kd-admin-blue-soft);
+  color: #0b4e92;
+}
+
+/* 부팅 중 화면 (인증 확인 전) */
+.kd-admin-boot {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  color: var(--kd-admin-muted);
+  gap: 12px;
+}
+.kd-admin-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--kd-admin-line);
+  border-top-color: var(--kd-admin-blue);
+  border-radius: 50%;
+  animation: kd-admin-spin 0.8s linear infinite;
+}
+@keyframes kd-admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-admin-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+/* 화면 하단 토스트 */
+.kd-admin-toast-host {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 60;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+.kd-admin-toast {
+  background: var(--kd-admin-navy);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 0.93rem;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(16, 36, 64, 0.25);
+}
+.kd-admin-toast-error {
+  background: var(--kd-admin-danger);
+}
+.kd-admin-toast-ok {
+  background: var(--kd-admin-ok);
+}
+
+/* ---------------------------------------------------------------
+   로그인 화면
+   --------------------------------------------------------------- */
+
+.kd-admin-login-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 0;
+  background: var(--kd-admin-bg);
+}
+.kd-admin-login-box {
+  width: 100%;
+  max-width: 420px;
+}
+.kd-admin-login-logo {
+  text-align: center;
+  margin-bottom: 26px;
+}
+.kd-admin-login-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: var(--kd-admin-navy);
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+.kd-admin-login-logo strong {
+  display: block;
+  font-size: 1.22rem;
+  color: var(--kd-admin-navy);
+}
+.kd-admin-login-sub {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--kd-admin-muted);
+  margin-top: 2px;
+}
+
+/* ---------------------------------------------------------------
+   관리자 홈 — 큰 카드 3개
+   --------------------------------------------------------------- */
+
+.kd-admin-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.kd-admin-home-card {
+  display: block;
+  background: var(--kd-admin-surface);
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius);
+  padding: 26px 22px;
+  text-decoration: none;
+  color: var(--kd-admin-navy);
+  box-shadow: var(--kd-admin-shadow);
+  transition:
+    border-color 0.12s,
+    transform 0.12s;
+  min-width: 0;
+}
+.kd-admin-home-card:hover {
+  border-color: var(--kd-admin-blue);
+  transform: translateY(-2px);
+}
+.kd-admin-home-icon {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border-radius: 11px;
+  background: var(--kd-admin-blue-soft);
+  color: var(--kd-admin-blue);
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  margin-bottom: 14px;
+}
+.kd-admin-home-card strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+.kd-admin-home-card span {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--kd-admin-muted);
+  line-height: 1.5;
+}
+.kd-admin-home-card-primary {
+  background: var(--kd-admin-navy);
+  border-color: var(--kd-admin-navy);
+  color: #fff;
+}
+.kd-admin-home-card-primary .kd-admin-home-icon {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+.kd-admin-home-card-primary span {
+  color: #b9cade;
+}
+.kd-admin-home-card-primary:hover {
+  border-color: var(--kd-admin-blue);
+}
+
+.kd-admin-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.kd-admin-stat {
+  background: var(--kd-admin-surface);
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius-sm);
+  padding: 15px 17px;
+  min-width: 0;
+}
+.kd-admin-stat dt {
+  font-size: 0.85rem;
+  color: var(--kd-admin-muted);
+  margin-bottom: 4px;
+}
+.kd-admin-stat dd {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--kd-admin-navy);
+}
+.kd-admin-stat dd small {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--kd-admin-muted);
+}
+
+/* 최근 글 목록 (홈) */
+.kd-admin-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.kd-admin-recent li {
+  border-top: 1px solid var(--kd-admin-line);
+  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.kd-admin-recent li:first-child {
+  border-top: 0;
+}
+.kd-admin-recent a {
+  font-weight: 600;
+  color: var(--kd-admin-navy);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.kd-admin-recent a:hover {
+  color: var(--kd-admin-blue);
+  text-decoration: underline;
+}
+.kd-admin-recent time {
+  color: var(--kd-admin-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.kd-admin-empty {
+  text-align: center;
+  padding: 34px 16px;
+  color: var(--kd-admin-muted);
+}
+.kd-admin-empty p {
+  margin: 0 0 14px;
+}
+
+/* ---------------------------------------------------------------
+   모바일
+   --------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .kd-admin-main {
+    padding: 20px 0 64px;
+  }
+  .kd-admin-card {
+    padding: 18px 16px;
+  }
+  h1 {
+    font-size: 1.3rem;
+  }
+  .kd-admin-header .kd-admin-wrap {
+    min-height: 56px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .kd-admin-nav {
+    width: 100%;
+    order: 3;
+  }
+  .kd-admin-nav a {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+  .kd-admin-account {
+    font-size: 0.8rem;
+  }
+  .kd-admin-home-card {
+    padding: 20px 18px;
+  }
+}
+
+/* ---------------------------------------------------------------
+   사진함
+   --------------------------------------------------------------- */
+
+.kd-admin-upload {
+  border: 2px dashed var(--kd-admin-line-strong);
+  border-radius: var(--kd-admin-radius);
+  background: var(--kd-admin-surface);
+  padding: 28px 20px;
+  text-align: center;
+}
+.kd-admin-upload.is-over {
+  border-color: var(--kd-admin-blue);
+  background: var(--kd-admin-blue-soft);
+}
+.kd-admin-upload p {
+  margin: 12px 0 0;
+  color: var(--kd-admin-muted);
+  font-size: 0.9rem;
+}
+.kd-admin-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.kd-admin-progress {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  text-align: left;
+  font-size: 0.88rem;
+}
+.kd-admin-progress li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-top: 1px solid var(--kd-admin-line);
+  color: var(--kd-admin-muted);
+}
+.kd-admin-progress li:first-child {
+  border-top: 0;
+}
+.kd-admin-progress .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--kd-admin-text);
+}
+.kd-admin-progress .state-ok {
+  color: var(--kd-admin-ok);
+  font-weight: 700;
+}
+.kd-admin-progress .state-ng {
+  color: var(--kd-admin-danger);
+  font-weight: 700;
+}
+
+.kd-admin-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+.kd-admin-photo-card {
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius-sm);
+  background: var(--kd-admin-surface);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.kd-admin-photo-card.is-picked {
+  border-color: var(--kd-admin-blue);
+  box-shadow: 0 0 0 2px var(--kd-admin-blue-soft);
+}
+.kd-admin-photo-thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #eef1f5;
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.kd-admin-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kd-admin-photo-body {
+  padding: 10px 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.kd-admin-photo-meta {
+  font-size: 0.78rem;
+  color: var(--kd-admin-muted);
+  line-height: 1.45;
+  min-width: 0;
+  /* 한글을 글자 단위로 끊으면 읽을 수 없습니다. 띄어쓰기에서만 줄바꿈합니다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 날짜·크기·용량 한 줄. 좁으면 … 으로 줄입니다. */
+.kd-admin-photo-size {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 보관 안내나 쓰인 글 제목. 두 줄까지만 보여줍니다. */
+.kd-admin-photo-note {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.kd-admin-photo-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .kd-admin-photo-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+}
+
+/* ---------------------------------------------------------------
+   시공사례 목록
+   --------------------------------------------------------------- */
+
+.kd-admin-case-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.kd-admin-case-item {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--kd-admin-line);
+  align-items: start;
+}
+.kd-admin-case-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.kd-admin-case-cover {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--kd-admin-radius-sm);
+  background: #eef1f5;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--kd-admin-muted);
+  font-size: 0.74rem;
+  text-align: center;
+}
+.kd-admin-case-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kd-admin-case-main {
+  min-width: 0;
+}
+.kd-admin-case-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--kd-admin-navy);
+  text-decoration: none;
+  margin: 6px 0 4px;
+  overflow-wrap: anywhere;
+}
+.kd-admin-case-title:hover {
+  color: var(--kd-admin-blue);
+  text-decoration: underline;
+}
+.kd-admin-case-meta {
+  font-size: 0.86rem;
+  color: var(--kd-admin-muted);
+  margin: 0 0 10px;
+  overflow-wrap: anywhere;
+}
+.kd-admin-case-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kd-admin-filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.kd-admin-filter-row button {
+  border: 1px solid var(--kd-admin-line-strong);
+  background: var(--kd-admin-surface);
+  color: var(--kd-admin-muted);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kd-admin-filter-row button[aria-pressed="true"] {
+  background: var(--kd-admin-navy);
+  border-color: var(--kd-admin-navy);
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .kd-admin-case-item {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 11px;
+  }
+}
+
+/* ---------------------------------------------------------------
+   글 작성 화면
+   --------------------------------------------------------------- */
+
+.kd-admin-editor-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--kd-admin-surface);
+  border-bottom: 1px solid var(--kd-admin-line);
+  margin: -28px 0 20px;
+  padding: 12px 0;
+}
+.kd-admin-editor-bar .inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.kd-admin-editor-bar .title {
+  font-weight: 700;
+  color: var(--kd-admin-navy);
+  flex: 1 1 200px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kd-admin-save-state {
+  font-size: 0.86rem;
+  color: var(--kd-admin-muted);
+  white-space: nowrap;
+}
+.kd-admin-save-state.is-saving {
+  color: var(--kd-admin-blue);
+}
+.kd-admin-save-state.is-saved {
+  color: var(--kd-admin-ok);
+}
+.kd-admin-save-state.is-error {
+  color: var(--kd-admin-danger);
+}
+
+.kd-admin-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .kd-admin-editor-grid.with-panel {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+details.kd-admin-section {
+  background: var(--kd-admin-surface);
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius);
+  box-shadow: var(--kd-admin-shadow);
+  overflow: hidden;
+}
+details.kd-admin-section > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 16px 22px;
+  font-weight: 700;
+  color: var(--kd-admin-navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+details.kd-admin-section > summary::-webkit-details-marker {
+  display: none;
+}
+details.kd-admin-section > summary::after {
+  content: "열기";
+  margin-left: auto;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--kd-admin-blue);
+}
+details.kd-admin-section[open] > summary::after {
+  content: "접기";
+}
+details.kd-admin-section > .body {
+  padding: 0 22px 22px;
+  border-top: 1px solid var(--kd-admin-line);
+  padding-top: 18px;
+}
+
+/* 블록 */
+.kd-admin-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kd-admin-block {
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius-sm);
+  background: var(--kd-admin-surface);
+  padding: 12px 14px 14px;
+}
+.kd-admin-block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.kd-admin-block-kind {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--kd-admin-blue);
+  background: var(--kd-admin-blue-soft);
+  border-radius: 999px;
+  padding: 3px 11px;
+}
+.kd-admin-block-tools {
+  margin-left: auto;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.kd-admin-block-tools button {
+  min-height: 34px;
+  min-width: 38px;
+  padding: 0 9px;
+  border: 1px solid var(--kd-admin-line-strong);
+  background: var(--kd-admin-surface);
+  color: var(--kd-admin-navy);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kd-admin-block-tools button:hover:not(:disabled) {
+  background: #f2f5f9;
+}
+.kd-admin-block-tools button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.kd-admin-block-tools .danger {
+  color: var(--kd-admin-danger);
+  border-color: #e9b9b9;
+}
+
+.kd-admin-text-tools {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.kd-admin-text-tools button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--kd-admin-line-strong);
+  background: var(--kd-admin-surface);
+  color: var(--kd-admin-navy);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kd-admin-text-tools button[aria-pressed="true"] {
+  background: var(--kd-admin-navy);
+  border-color: var(--kd-admin-navy);
+  color: #fff;
+}
+
+.kd-admin-block textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: 10px 12px;
+  border: 1px solid var(--kd-admin-line-strong);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.7;
+  resize: vertical;
+}
+.kd-admin-block input[type="text"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--kd-admin-line-strong);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.kd-admin-block textarea:focus,
+.kd-admin-block input:focus {
+  outline: 2px solid var(--kd-admin-blue);
+  outline-offset: 1px;
+}
+
+.kd-admin-block-divider {
+  border-top: 2px dashed var(--kd-admin-line-strong);
+  margin: 6px 0;
+}
+
+/* 블록 안의 사진 자리 */
+.kd-admin-slot-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+.kd-admin-slot {
+  border: 1px dashed var(--kd-admin-line-strong);
+  border-radius: 7px;
+  padding: 8px;
+  text-align: center;
+  background: #fbfcfd;
+  min-width: 0;
+}
+.kd-admin-slot .frame {
+  aspect-ratio: 4 / 3;
+  background: #eef1f5;
+  border-radius: 5px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--kd-admin-muted);
+  font-size: 0.78rem;
+  margin-bottom: 8px;
+}
+.kd-admin-slot .frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kd-admin-slot .slot-name {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--kd-admin-navy);
+  margin-bottom: 6px;
+}
+
+.kd-admin-add-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.kd-admin-add-row button {
+  min-height: 48px;
+  border: 1px dashed var(--kd-admin-line-strong);
+  background: var(--kd-admin-surface);
+  color: var(--kd-admin-navy);
+  border-radius: var(--kd-admin-radius-sm);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kd-admin-add-row button:hover {
+  border-color: var(--kd-admin-blue);
+  color: var(--kd-admin-blue);
+  border-style: solid;
+}
+
+/* 사진함 패널 */
+.kd-admin-panel {
+  background: var(--kd-admin-surface);
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius);
+  box-shadow: var(--kd-admin-shadow);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.kd-admin-panel-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--kd-admin-line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.kd-admin-panel-head h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+.kd-admin-panel-body {
+  padding: 14px 16px;
+  overflow-y: auto;
+}
+.kd-admin-panel-foot {
+  padding: 12px 16px;
+  border-top: 1px solid var(--kd-admin-line);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (min-width: 1024px) {
+  .kd-admin-panel {
+    position: sticky;
+    top: 78px;
+    max-height: calc(100vh - 100px);
+  }
+}
+/* 좁은 화면에서는 전체 화면 덮개로 */
+@media (max-width: 1023px) {
+  .kd-admin-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    border-radius: 0;
+    border: 0;
+  }
+  .kd-admin-panel.kd-admin-hide {
+    display: none !important;
+  }
+  .kd-admin-panel-body {
+    flex: 1 1 auto;
+  }
+}
+
+.kd-admin-panel-hint {
+  font-size: 0.85rem;
+  color: var(--kd-admin-muted);
+  margin: 0 0 12px;
+}
+.kd-admin-panel .kd-admin-photo-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+/* 고르는 창에서는 사진이 주인공입니다. 글자는 작게 둡니다. */
+.kd-admin-panel .kd-admin-photo-meta {
+  font-size: 0.72rem;
+}
+.kd-admin-panel .kd-admin-photo-body {
+  padding: 8px 9px 10px;
+  gap: 5px;
+}
+
+/* 좁은 화면에서는 글 제목이 저장 상태를 밀어내지 않도록 한 줄을 통째로 씁니다. */
+@media (max-width: 640px) {
+  .kd-admin-editor-bar {
+    margin-top: -20px;
+  }
+  /* 제목 입력칸이 바로 아래 있으므로 좁은 화면에서는 바의 제목을 숨겨 높이를 줄입니다. */
+  .kd-admin-editor-bar .title {
+    display: none;
+  }
+  .kd-admin-editor-bar .kd-admin-save-state {
+    flex: 0 0 auto;
+    margin-right: auto;
+  }
+}
+
+/* ---------------------------------------------------------------
+   제목 중심 작성 화면 (네이버 블로그 글쓰기 흐름)
+   --------------------------------------------------------------- */
+
+.kd-admin-title-field {
+  background: var(--kd-admin-surface);
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius);
+  box-shadow: var(--kd-admin-shadow);
+  padding: 18px 22px;
+  margin-bottom: 14px;
+}
+.kd-admin-title-input {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--kd-admin-navy);
+  background: transparent;
+}
+.kd-admin-title-input::placeholder {
+  color: #b4bdc7;
+  font-weight: 700;
+}
+.kd-admin-title-input:focus {
+  outline: 0;
+}
+.kd-admin-title-field:focus-within {
+  border-color: var(--kd-admin-blue);
+}
+
+/* 본문이 화면 대부분을 차지하도록 */
+.kd-admin-body-card {
+  background: var(--kd-admin-surface);
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius);
+  box-shadow: var(--kd-admin-shadow);
+  padding: 20px 22px 24px;
+  min-height: 48vh;
+}
+
+/* 기본정보는 아래쪽 보조영역 */
+details.kd-admin-section.kd-admin-meta {
+  margin-top: 16px;
+  box-shadow: none;
+  background: transparent;
+}
+details.kd-admin-section.kd-admin-meta > summary {
+  background: var(--kd-admin-surface);
+  border-radius: var(--kd-admin-radius);
+}
+details.kd-admin-section.kd-admin-meta[open] > summary {
+  border-radius: var(--kd-admin-radius) var(--kd-admin-radius) 0 0;
+}
+details.kd-admin-section.kd-admin-meta > .body {
+  background: var(--kd-admin-surface);
+  border-radius: 0 0 var(--kd-admin-radius) var(--kd-admin-radius);
+}
+.kd-admin-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 18px;
+}
+.kd-admin-meta-grid .kd-admin-field {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .kd-admin-title-field {
+    padding: 14px 16px;
+  }
+  .kd-admin-title-input {
+    font-size: 1.3rem;
+  }
+  .kd-admin-body-card {
+    padding: 16px 14px 20px;
+  }
+}
+
+/* ---------------------------------------------------------------
+   블록 끌어서 옮기기
+   --------------------------------------------------------------- */
+
+.kd-admin-block-drag {
+  cursor: grab;
+  user-select: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--kd-admin-muted);
+  background: #f2f5f9;
+  border: 1px solid var(--kd-admin-line);
+  border-radius: 7px;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+.kd-admin-block-drag:active {
+  cursor: grabbing;
+}
+.kd-admin-block.is-dragging {
+  opacity: 0.45;
+}
+.kd-admin-block.drop-before {
+  box-shadow: 0 -3px 0 0 var(--kd-admin-blue);
+}
+.kd-admin-block.drop-after {
+  box-shadow: 0 3px 0 0 var(--kd-admin-blue);
+}
+
+/* 사진 자리 안의 설명 입력칸 */
+.kd-admin-slot-label {
+  font-size: 0.74rem;
+  margin-bottom: 4px;
+  color: var(--kd-admin-muted);
+  font-weight: 600;
+}
+.kd-admin-slot input[type='text'] {
+  min-height: 36px;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+.kd-admin-slot.is-missing {
+  border-color: #e9b9b9;
+  background: var(--kd-admin-danger-soft);
+}
+
+/* ---------------------------------------------------------------
+   게시 전 점검
+   --------------------------------------------------------------- */
+
+.kd-admin-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.kd-admin-checks li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 11px 0;
+  border-top: 1px solid var(--kd-admin-line);
+}
+.kd-admin-checks li:first-child {
+  border-top: 0;
+}
+.kd-admin-check-mark {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-top: 1px;
+}
+.kd-admin-check-ok {
+  background: var(--kd-admin-ok-soft);
+  color: var(--kd-admin-ok);
+}
+.kd-admin-check-error {
+  background: var(--kd-admin-danger-soft);
+  color: var(--kd-admin-danger);
+}
+.kd-admin-check-warn {
+  background: var(--kd-admin-warn-soft);
+  color: var(--kd-admin-warn);
+}
+.kd-admin-check-body {
+  min-width: 0;
+}
+.kd-admin-check-body strong {
+  display: block;
+  font-size: 0.93rem;
+  color: var(--kd-admin-navy);
+}
+.kd-admin-check-body span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--kd-admin-muted);
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.kd-admin-check-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+/* 주소(slug) 입력칸 */
+.kd-admin-slug-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.kd-admin-slug-row input {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+}
+.kd-admin-slug-preview {
+  font-size: 0.82rem;
+  color: var(--kd-admin-muted);
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+}
+.kd-admin-slug-preview code {
+  background: #eef1f5;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* ---------------------------------------------------------------
+   게시
+   --------------------------------------------------------------- */
+
+.kd-admin-publish-facts {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.kd-admin-publish-cover img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--kd-admin-radius-sm);
+  border: 1px solid var(--kd-admin-line);
+}
+.kd-admin-publish-cover span:not(.kd-admin-hint) {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #eef1f5;
+  border-radius: var(--kd-admin-radius-sm);
+  color: var(--kd-admin-muted);
+  font-size: 0.8rem;
+}
+.kd-admin-publish-cover .kd-admin-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.75rem;
+}
+.kd-admin-publish-meta {
+  margin: 0;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.kd-admin-publish-meta dt {
+  font-size: 0.78rem;
+  color: var(--kd-admin-muted);
+}
+.kd-admin-publish-meta dd {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--kd-admin-navy);
+  overflow-wrap: anywhere;
+}
+.kd-admin-photo-lines {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--kd-admin-text);
+}
+.kd-admin-photo-lines li {
+  padding: 3px 0;
+  overflow-wrap: anywhere;
+}
+.kd-admin-photo-lines code,
+.kd-admin-publish-meta code {
+  background: #eef1f5;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.8rem;
+}
+.kd-admin-photo-lines em {
+  color: var(--kd-admin-warn);
+  font-style: normal;
+}
+
+details.kd-admin-md-box {
+  margin-top: 14px;
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius-sm);
+  background: #fbfcfd;
+}
+details.kd-admin-md-box > summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--kd-admin-navy);
+}
+details.kd-admin-md-box pre {
+  margin: 0;
+  padding: 0 14px 14px;
+  max-height: 340px;
+  overflow: auto;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--kd-admin-text);
+}
+
+/* 진행 단계 */
+.kd-admin-publish-state {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--kd-admin-line);
+  border-radius: var(--kd-admin-radius-sm);
+  background: var(--kd-admin-blue-soft);
+}
+.kd-admin-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.kd-admin-steps li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--kd-admin-muted);
+  background: #fff;
+  border: 1px solid var(--kd-admin-line);
+  border-radius: 999px;
+  padding: 6px 13px 6px 7px;
+}
+.kd-admin-steps li span {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  background: #eef1f5;
+  color: var(--kd-admin-muted);
+}
+.kd-admin-steps li.is-done {
+  color: var(--kd-admin-ok);
+  border-color: #bfe3cd;
+}
+.kd-admin-steps li.is-done span {
+  background: var(--kd-admin-ok);
+  color: #fff;
+}
+.kd-admin-steps li.is-now {
+  color: var(--kd-admin-blue);
+  border-color: var(--kd-admin-blue);
+}
+.kd-admin-steps li.is-now span {
+  background: var(--kd-admin-blue);
+  color: #fff;
+}
+.kd-admin-step-note {
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+  color: #0b4e92;
+  white-space: pre-line;
+}
+.kd-admin-step-note.is-failed {
+  color: var(--kd-admin-danger);
+  font-weight: 600;
+}
+.kd-admin-step-note.is-done {
+  color: var(--kd-admin-ok);
+  font-weight: 600;
+}
+#published-link {
+  margin-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .kd-admin-publish-facts {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+}

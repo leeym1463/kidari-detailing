@@ -1,0 +1,22 @@
+---
+// /admin/cases/new — 새 글쓰기 입구.
+//
+// 예전에는 여기서 기본정보 4개를 먼저 받았지만, 네이버 블로그처럼
+// 바로 빈 작성 화면이 열리도록 바꿨습니다. 실제 글은 작성 화면에서
+// 처음 내용을 입력할 때 만들어집니다.
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="새 시공사례" nav="cases">
+  <div class="kd-admin-empty">
+    <p>글쓰기 화면을 여는 중입니다…</p>
+    <a class="kd-admin-btn kd-admin-btn-primary" href="/admin/cases/edit" aria-label="글쓰기 화면 열기">
+      글쓰기 화면 열기
+    </a>
+  </div>
+</AdminLayout>
+
+<script>
+  // 뒤로가기를 눌렀을 때 이 페이지가 다시 끼어들지 않도록 replace 를 씁니다.
+  location.replace('/admin/cases/edit');
+</script>
