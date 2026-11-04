@@ -1,0 +1,62 @@
+# Supabase 일시중지 방지
+#
+# 무료 플랜은 1주일 동안 접속이 없으면 프로젝트를 멈춥니다.
+# 이틀에 한 번 ping() 함수를 불러 "접속이 있었다"는 기록을 남깁니다.
+#
+# 쓰는 값은 둘 다 공개용 설정값입니다. 비밀 키는 쓰지 않습니다.
+# 그래도 나중에 값을 바꾸기 쉽도록 저장소 Secrets 에 넣어 참조합니다.
+
+name: Supabase 깨우기
+
+on:
+  schedule:
+    # 이틀에 한 번, UTC 03:00 = 한국시간 정오
+    - cron: '0 3 */2 * *'
+  # 필요할 때 손으로 돌릴 수 있게 합니다 (Actions 탭 → Run workflow)
+  workflow_dispatch:
+
+# 저장소에 아무것도 쓰지 않습니다.
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: ping 호출
+        env:
+          SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_KEY}" ]; then
+            echo "::error::저장소 Secrets 에 PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_PUBLISHABLE_KEY 가 없습니다."
+            exit 1
+          fi
+
+          # 일시중지 상태라면 주소 자체가 응답하지 않아 몇 번 더 시도합니다.
+          for attempt in 1 2 3; do
+            body=$(mktemp)
+            code=$(curl -s -o "$body" -w '%{http_code}' --max-time 30 \
+              -X POST "${SUPABASE_URL}/rest/v1/rpc/ping" \
+              -H "apikey: ${SUPABASE_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_KEY}" \
+              -H 'Content-Type: application/json' \
+              -d '{}' || echo "000")
+
+            echo "시도 ${attempt}: HTTP ${code}"
+
+            if [ "$code" = "200" ]; then
+              echo "서버 시각: $(cat "$body")"
+              echo "::notice::Supabase 정상 — 일시중지 시계가 초기화되었습니다."
+              exit 0
+            fi
+
+            echo "응답 본문: $(head -c 300 "$body")"
+            [ "$attempt" -lt 3 ] && sleep 20
+          done
+
+          echo "::error::Supabase 에 닿지 못했습니다. 프로젝트가 일시중지되었거나 키가 바뀌었을 수 있습니다."
+          exit 1
