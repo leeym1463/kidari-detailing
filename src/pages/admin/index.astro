@@ -19,7 +19,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
         <p id="login-error" class="kd-admin-notice kd-admin-hide" role="alert"></p>
 
-        <form id="login-form" novalidate>
+        <!--
+          onsubmit="return false" 는 안전장치입니다.
+          자바스크립트가 아직 준비되지 않았거나 실패한 상태에서 Enter 를 누르면
+          브라우저가 기본 동작으로 폼을 보내면서 비밀번호가 주소창에 남습니다.
+          이 속성은 파싱 시점에 걸리므로 그런 경우에도 전송을 막습니다.
+        -->
+        <form id="login-form" novalidate onsubmit="return false">
           <div class="kd-admin-field">
             <label for="login-email">관리자 이메일</label>
             <input

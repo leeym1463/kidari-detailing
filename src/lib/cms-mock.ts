@@ -22,6 +22,7 @@ const KEY_CASES = 'kidari-mock-cases';
 const KEY_PHOTOS = 'kidari-mock-photos';
 const KEY_BLOBS = 'kidari-mock-blobs';
 const KEY_SESSION = 'kidari-mock-session';
+const KEY_PUBLISH = 'kidari-mock-publish';
 const MOCK_PASSWORD = 'mock';
 
 function read<T>(key: string, fallback: T): T {
@@ -197,6 +198,69 @@ export const mockApi: CmsApi = {
     return tick(map);
   },
 
+  // 게시 흐름 흉내내기.
+  //   호출할 때마다 한 단계씩 나아갑니다: verifying → deploying → published
+  //   제목에 "실패테스트" 가 들어 있으면 빌드 실패를 흉내냅니다.
+  async publish(caseId) {
+    const rows = read<CaseRow[]>(KEY_CASES, []);
+    const row = rows.find((r) => r.id === caseId);
+    if (!row) return { ok: false, error: '글을 찾을 수 없습니다.' };
+
+    const problems: string[] = [];
+    if (!row.title?.trim()) problems.push('제목이 비어 있습니다.');
+    if (!row.summary?.trim()) problems.push('요약이 비어 있습니다.');
+    if (!row.vehicle?.trim()) problems.push('차량명이 비어 있습니다.');
+    if (!/^[a-z0-9-]{4,80}$/.test(row.slug)) problems.push('공개 주소 형식이 올바르지 않습니다.');
+    if ((row.content_blocks ?? []).length === 0) problems.push('본문이 비어 있습니다.');
+    if (problems.length > 0) {
+      write(KEY_PUBLISH, { ...read<Record<string, number>>(KEY_PUBLISH, {}), [caseId]: -1 });
+      return { ok: false, error: '게시할 수 없는 내용이 있습니다.', problems };
+    }
+
+    write(KEY_PUBLISH, { ...read<Record<string, number>>(KEY_PUBLISH, {}), [caseId]: 0 });
+    await tick(null);
+    return { ok: true, state: 'verifying' as const, slug: row.slug };
+  },
+
+  async publishStatus(caseId) {
+    const steps = read<Record<string, number>>(KEY_PUBLISH, {});
+    const rows = read<CaseRow[]>(KEY_CASES, []);
+    const row = rows.find((r) => r.id === caseId);
+    const url = `https://kidari-detailing.pages.dev/cases/${row?.slug ?? ''}`;
+
+    if (!(caseId in steps)) return tick({ state: null });
+
+    const failing = (row?.title ?? '').includes('실패테스트');
+    const step = steps[caseId];
+
+    if (step < 0) return tick({ state: 'failed' as const, error: '게시할 수 없는 내용이 있습니다.' });
+
+    const next = step + 1;
+    write(KEY_PUBLISH, { ...steps, [caseId]: next });
+
+    if (failing && next >= 2) {
+      return tick({
+        state: 'failed' as const,
+        error: '빌드 검증에 실패해 공개 사이트에 반영하지 않았습니다. 글과 사진은 그대로 남아 있습니다.',
+      });
+    }
+    if (next === 1) return tick({ state: 'verifying' as const });
+    if (next === 2) return tick({ state: 'deploying' as const });
+
+    // 게시 완료 — 실제 구현도 공개 주소 확인까지 끝난 뒤에만 여기 옵니다.
+    const idx = rows.findIndex((r) => r.id === caseId);
+    if (idx >= 0) {
+      rows[idx] = {
+        ...rows[idx],
+        status: 'published',
+        published_at: nowISO(),
+        updated_at: nowISO(),
+      } as CaseRow;
+      write(KEY_CASES, rows);
+    }
+    return tick({ state: 'published' as const, url });
+  },
+
   async syncCasePhotos(caseId, usedPaths) {
     const used = new Set(usedPaths);
     const rows = read<PhotoRow[]>(KEY_PHOTOS, []).map((p) => {
@@ -211,7 +275,7 @@ export const mockApi: CmsApi = {
 
 /** 개발 중 데이터를 비우고 싶을 때 콘솔에서 호출합니다. */
 export function resetMock(): void {
-  for (const k of [KEY_CASES, KEY_PHOTOS, KEY_BLOBS, KEY_SESSION]) localStorage.removeItem(k);
+  for (const k of [KEY_CASES, KEY_PHOTOS, KEY_BLOBS, KEY_SESSION, KEY_PUBLISH]) localStorage.removeItem(k);
 }
 
 // 자동 테스트에서 쓰기 위해 전역에 노출합니다 (개발 전용 파일이라 안전합니다).

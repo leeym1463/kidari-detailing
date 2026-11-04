@@ -1,0 +1,85 @@
+# 게시 전 빌드 검증
+#
+# 관리자가 "게시"를 누르면 Supabase Edge Function 이 publish/** 브랜치에
+# 마크다운과 사진을 올립니다. 이 워크플로가 그 브랜치를 받아
+# 운영과 똑같은 npm run build 로 검증한 뒤, 성공할 때만 main 에 반영합니다.
+#
+# 실패하면 main 과 공개 사이트는 손대지 않습니다.
+# 사장님이 쓰던 글과 사진도 Supabase 에 그대로 남습니다.
+
+name: 게시 전 빌드 검증
+
+on:
+  push:
+    branches:
+      - 'publish/**'
+
+# main 에 반영해야 하므로 쓰기 권한이 필요합니다.
+# 저장소 기본 토큰을 쓰며, 별도 PAT 는 쓰지 않습니다.
+permissions:
+  contents: write
+
+concurrency:
+  # 동시에 여러 글을 올려도 main 반영이 겹치지 않게 한 줄로 세웁니다.
+  group: publish-to-main
+  cancel-in-progress: false
+
+jobs:
+  verify-and-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 소스 받기
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Node 준비
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 운영과 동일하게 빌드
+        id: build
+        run: npm run build
+
+      - name: 공개 페이지가 실제로 만들어졌는지 확인
+        run: |
+          set -euo pipefail
+          slug="${GITHUB_REF_NAME#publish/}"
+          slug="${slug%-*}"          # 뒤에 붙인 시각 제거
+          page="dist/cases/${slug}/index.html"
+          if [ ! -f "$page" ]; then
+            echo "::error::빌드는 됐지만 공개 페이지가 없습니다: ${page}"
+            echo "만들어진 시공사례 페이지 목록:"
+            ls dist/cases | head -50
+            exit 1
+          fi
+          echo "확인됨: ${page} ($(wc -c < "$page") bytes)"
+
+      - name: main 에 반영
+        run: |
+          set -euo pipefail
+          git config user.name  "kidari-cms"
+          git config user.email "noreply@kidari-detailing.com"
+          git fetch origin main
+          git checkout main
+          # 임시 브랜치의 커밋을 그대로 얹습니다. 내용 충돌이 없으면 빨리감기로 끝납니다.
+          git merge --no-edit "$GITHUB_SHA"
+          git push origin main
+          echo "main 반영 완료: $(git rev-parse --short HEAD)"
+
+      - name: 임시 브랜치 정리
+        if: always()
+        run: |
+          git push origin --delete "$GITHUB_REF_NAME" || true
+
+      - name: 실패 안내
+        if: failure()
+        run: |
+          echo "::error::빌드 검증에 실패해 main 에 반영하지 않았습니다. 공개 사이트는 그대로입니다."

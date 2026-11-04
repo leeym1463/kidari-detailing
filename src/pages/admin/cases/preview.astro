@@ -4,6 +4,7 @@
 // 공개 사이트의 global.css 를 그대로 불러오고, 공개 시공사례 상세 페이지와 같은
 // 마크업(.page-hero / .wrap / .prose)을 씁니다. 공개 페이지 파일은 건드리지 않습니다.
 import '../../../styles/global.css';
+import '../../../styles/before-after.css';
 ---
 
 <!doctype html>
@@ -144,6 +145,7 @@ import '../../../styles/global.css';
   import { blocksToHtml } from '../../../lib/blocks-render';
   import { escapeHtml, formatDate } from '../../../lib/admin-ui';
   import { usedPhotoPaths } from '../../../lib/cms-types';
+  import { initBeforeAfterSliders } from '../../../scripts/before-after';
 
   function fail(message: string) {
     const node = document.getElementById('pv-loading')!;
@@ -237,6 +239,7 @@ import '../../../styles/global.css';
 
     document.getElementById('pv-loading')!.hidden = true;
     document.getElementById('pv-article')!.hidden = false;
+    initBeforeAfterSliders();
   })().catch((e) => {
     fail('미리보기를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
     console.error('[미리보기]', e);

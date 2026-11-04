@@ -185,6 +185,16 @@ const existing = {
           <div class="kd-admin-check-summary" id="check-counts"></div>
           <ul class="kd-admin-checks" id="check-list" aria-label="게시 전 점검 결과"></ul>
 
+          <div class="kd-admin-field" style="margin:18px 0 0;">
+            <span class="kd-admin-label">게시될 내용</span>
+            <div class="kd-admin-publish-facts" id="publish-facts"></div>
+          </div>
+
+          <details class="kd-admin-md-box">
+            <summary aria-label="만들어질 파일 내용 보기">만들어질 파일 내용 보기</summary>
+            <pre id="publish-markdown" aria-label="만들어질 파일 내용"></pre>
+          </details>
+
           <div class="kd-admin-btn-row" style="margin-top:16px;">
             <button type="button" id="btn-recheck" class="kd-admin-btn kd-admin-btn-sm" aria-label="다시 검사">
               다시 검사
@@ -199,9 +209,22 @@ const existing = {
               게시하기
             </button>
           </div>
-          <p class="kd-admin-hint" id="publish-note">
-            게시 기능은 다음 단계에서 연결됩니다. 지금은 점검만 할 수 있습니다.
-          </p>
+          <p class="kd-admin-hint" id="publish-note"></p>
+
+          <div class="kd-admin-publish-state kd-admin-hide" id="publish-state" role="status" aria-live="polite">
+            <ol class="kd-admin-steps" id="publish-steps"></ol>
+            <p class="kd-admin-step-note" id="publish-step-note"></p>
+            <a
+              class="kd-admin-btn kd-admin-btn-primary kd-admin-btn-sm kd-admin-hide"
+              id="published-link"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              aria-label="공개된 글 열어보기"
+            >
+              공개된 글 열어보기
+            </a>
+          </div>
         </div>
       </details>
     </div>
@@ -269,6 +292,8 @@ const existing = {
   } from '../../../lib/cms-types';
   import { buildSlug, makeUnique, validateSlug } from '../../../lib/slug';
   import { countByLevel, hasBlockingError, runPublishChecks } from '../../../lib/publish-checks';
+  import { buildMarkdownFile } from '../../../lib/blocks-render';
+  import type { PublishState } from '../../../lib/cms-api';
   import {
     debounce,
     el,
@@ -703,18 +728,244 @@ const existing = {
         })
         .join('');
 
-      // 게시 단추는 Phase 2B 에서 열립니다. 지금은 검사 결과만 반영해 둡니다.
+      const blocked = hasBlockingError(checks);
       const publish = el<HTMLButtonElement>('btn-publish');
-      publish.disabled = true;
-      el('publish-note').textContent = hasBlockingError(checks)
-        ? '고쳐야 할 항목이 남아 있습니다. 게시 기능은 다음 단계에서 연결됩니다.'
-        : '점검을 통과했습니다. 게시 기능은 다음 단계에서 연결됩니다.';
+      publish.disabled = blocked || !caseId || publishing;
+      publish.textContent = row?.status === 'published' ? '변경사항 게시' : '게시하기';
+      el('publish-note').textContent = blocked
+        ? '고쳐야 할 항목이 남아 있습니다. 모두 해결해야 게시할 수 있습니다.'
+        : row?.status === 'published'
+          ? '수정한 내용을 공개 사이트에 반영합니다. 공개 주소는 그대로 유지됩니다.'
+          : '게시하면 빌드 검증을 거쳐 공개 사이트에 올라갑니다.';
+
+      renderPublishFacts(blocks);
+      renderMarkdownPreview(blocks);
+    }
+
+    // ----------------------------------------------------------------
+    // 게시될 내용 미리 보여주기
+    // ----------------------------------------------------------------
+
+    /** 저장소에 들어갈 파일 이름(img-01.jpg …). Edge Function 과 같은 순서 규칙입니다. */
+    function photoNames(blocks: ReturnType<typeof editor.getBlocks>) {
+      const map = new Map<string, string>();
+      usedPhotoPaths(blocks).forEach((p, i) => {
+        const ext = (p.split('.').pop() ?? 'jpg').toLowerCase();
+        map.set(p, `img-${String(i + 1).padStart(2, '0')}.${ext}`);
+      });
+      return map;
+    }
+
+    function renderPublishFacts(blocks: ReturnType<typeof editor.getBlocks>) {
+      const cover = firstPhotoPath(blocks);
+      const used = usedPhotoPaths(blocks);
+      const names = photoNames(blocks);
+      const coverUrl = cover ? gallery.thumbUrl(cover) : undefined;
+
+      const altOf = new Map<string, string>();
+      for (const b of blocks) {
+        if (b.type === 'image' && b.path) altOf.set(b.path, (b.alt ?? b.caption ?? '').trim());
+        if (b.type === 'imageGroup') {
+          for (const i of b.items ?? []) if (i.path) altOf.set(i.path, (i.alt ?? '').trim());
+        }
+        if (b.type === 'beforeAfter') {
+          if (b.before) altOf.set(b.before, '시공 전');
+          if (b.after) altOf.set(b.after, '시공 후');
+        }
+      }
+
+      el('publish-facts').innerHTML = `
+        <div class="kd-admin-publish-cover">
+          ${coverUrl ? `<img src="${escapeHtml(coverUrl)}" alt="대표 사진" />` : '<span>대표 사진 없음</span>'}
+          <span class="kd-admin-hint">대표 사진 (목록에 보입니다)</span>
+        </div>
+        <dl class="kd-admin-publish-meta">
+          <div><dt>공개 주소</dt><dd><code>/cases/${escapeHtml(F.slug.value.trim() || '-')}</code></dd></div>
+          <div><dt>사진</dt><dd>${used.length}장</dd></div>
+        </dl>
+        <ul class="kd-admin-photo-lines">
+          ${used
+            .map((p) => {
+              const alt = altOf.get(p) ?? '';
+              return `<li><code>${escapeHtml(names.get(p) ?? '')}</code> ${
+                alt ? escapeHtml(alt) : '<em>설명 없음</em>'
+              }</li>`;
+            })
+            .join('')}
+        </ul>`;
+    }
+
+    function renderMarkdownPreview(blocks: ReturnType<typeof editor.getBlocks>) {
+      const names = photoNames(blocks);
+      const markdown = buildMarkdownFile(
+        {
+          slug: F.slug.value.trim(),
+          title: F.title.value.trim(),
+          category: F.category.value,
+          case_date: F.date.value || todayISO(),
+          vehicle: F.vehicle.value.trim() || null,
+          summary: F.summary.value.trim() || null,
+          // 화면에서 받지 않는 항목은 저장된 값을 그대로 씁니다.
+          before_condition: row?.before_condition ?? null,
+          work_performed: row?.work_performed ?? null,
+          duration: row?.duration ?? null,
+          price_note: row?.price_note ?? null,
+          content_blocks: blocks,
+        },
+        (p) => names.get(p)
+      );
+      el('publish-markdown').textContent = markdown;
     }
 
     el('btn-recheck').addEventListener('click', () => {
       void runChecks();
       toast('다시 검사했습니다.', 'ok');
     });
+
+    // ----------------------------------------------------------------
+    // 게시
+    //
+    // 눌렀다고 바로 "게시 완료"가 아닙니다.
+    //   검사 중 → 빌드 확인 중 → 배포 중 → 게시 완료
+    // 마지막 단계는 공개 주소에서 글이 실제로 열리는 것을 확인한 뒤에만 켜집니다.
+    // ----------------------------------------------------------------
+    const STEPS: { state: PublishState; label: string; note: string }[] = [
+      { state: 'checking', label: '검사 중', note: '내용을 확인하고 사진을 정리하고 있습니다.' },
+      {
+        state: 'verifying',
+        label: '빌드 확인 중',
+        note: '실제 사이트와 똑같이 만들어보며 문제가 없는지 확인합니다. 2~3분 걸립니다.',
+      },
+      { state: 'deploying', label: '배포 중', note: '확인을 통과했습니다. 사이트를 다시 만드는 중입니다.' },
+      { state: 'published', label: '게시 완료', note: '공개 주소에서 글이 열리는 것까지 확인했습니다.' },
+    ];
+
+    let publishing = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function paintSteps(current: PublishState | null, message?: string) {
+      const box = el('publish-state');
+      show(box, Boolean(current));
+      if (!current) return;
+
+      const failed = current === 'failed';
+      const at = STEPS.findIndex((s) => s.state === current);
+
+      el('publish-steps').innerHTML = STEPS.map((s, i) => {
+        let kind = 'wait';
+        if (!failed && at >= 0 && i < at) kind = 'done';
+        else if (!failed && i === at) kind = 'now';
+        else if (failed && i <= 1) kind = 'done';
+        return `<li class="is-${kind}"><span aria-hidden="true">${kind === 'done' ? '✓' : i + 1}</span>${s.label}</li>`;
+      }).join('');
+
+      el('publish-step-note').textContent =
+        message ?? (at >= 0 ? STEPS[at].note : '') ?? '';
+      el('publish-step-note').className =
+        'kd-admin-step-note' + (failed ? ' is-failed' : current === 'published' ? ' is-done' : '');
+    }
+
+    function stopPolling() {
+      if (pollTimer) clearTimeout(pollTimer);
+      pollTimer = null;
+    }
+
+    async function pollUntilDone(): Promise<void> {
+      if (!caseId) return;
+      const started = Date.now();
+      const LIMIT_MS = 12 * 60 * 1000; // 12분이면 뭔가 잘못된 것입니다
+
+      const tick = async () => {
+        if (!caseId) return;
+        let status;
+        try {
+          status = await api.publishStatus(caseId);
+        } catch (e) {
+          paintSteps('failed', friendlyError(e));
+          publishing = false;
+          return;
+        }
+
+        if (status.state === 'published') {
+          paintSteps('published');
+          const link = el<HTMLAnchorElement>('published-link');
+          if (status.url) {
+            link.href = status.url;
+            show(link, true);
+          }
+          publishing = false;
+          if (row) row.status = 'published';
+          toast('게시를 마쳤습니다.', 'ok');
+          void runChecks();
+          return;
+        }
+
+        if (status.state === 'failed') {
+          paintSteps('failed', status.error ?? '게시하지 못했습니다. 공개 사이트는 그대로입니다.');
+          publishing = false;
+          void runChecks();
+          return;
+        }
+
+        paintSteps(status.state ?? 'verifying');
+
+        if (Date.now() - started > LIMIT_MS) {
+          paintSteps(
+            'failed',
+            '시간이 너무 오래 걸립니다. 공개 사이트는 그대로이니 잠시 후 다시 시도해주세요.'
+          );
+          publishing = false;
+          return;
+        }
+        pollTimer = setTimeout(() => void tick(), 10_000);
+      };
+
+      pollTimer = setTimeout(() => void tick(), 5_000);
+    }
+
+    el('btn-publish').addEventListener('click', async () => {
+      if (!caseId || publishing) return;
+
+      const slug = F.slug.value.trim();
+      const again = row?.status === 'published';
+      const ok = confirm(
+        again
+          ? `수정한 내용을 공개 사이트에 반영할까요?\n\n주소: /cases/${slug}\n주소는 그대로 유지됩니다.`
+          : `공개 사이트에 올릴까요?\n\n제목: ${F.title.value.trim()}\n주소: /cases/${slug}\n\n올린 뒤에는 주소를 바꿀 수 없습니다.`
+      );
+      if (!ok) return;
+
+      // 올리기 직전에 최신 내용을 먼저 저장합니다.
+      scheduleSave.flush();
+      await save(false);
+
+      publishing = true;
+      stopPolling();
+      show(el('published-link'), false);
+      el<HTMLButtonElement>('btn-publish').disabled = true;
+      paintSteps('checking');
+
+      try {
+        const result = await api.publish(caseId);
+        if (!result.ok) {
+          paintSteps(
+            'failed',
+            [result.error, ...(result.problems ?? [])].filter(Boolean).join('\n')
+          );
+          publishing = false;
+          void runChecks();
+          return;
+        }
+        paintSteps('verifying');
+        void pollUntilDone();
+      } catch (e) {
+        paintSteps('failed', friendlyError(e));
+        publishing = false;
+        void runChecks();
+      }
+    });
+
+    window.addEventListener('beforeunload', stopPolling);
 
     el('publish-section').addEventListener('toggle', () => {
       if ((el('publish-section') as HTMLDetailsElement).open) void runChecks();

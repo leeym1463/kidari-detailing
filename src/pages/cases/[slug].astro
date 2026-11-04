@@ -4,6 +4,8 @@ import Layout from '../../layouts/Layout.astro';
 import { serviceCategoryHref } from '../../data/categories';
 import { blogPostingSchema, breadcrumbSchema } from '../../utils/schema';
 import BeforeAfterSlider from '../../components/BeforeAfterSlider.astro';
+// 슬라이더는 frontmatter 로도, 본문 안 HTML 로도 나올 수 있어 페이지 단위로 불러옵니다.
+import '../../styles/before-after.css';
 
 export async function getStaticPaths() {
   const entries = await getCollection('cases', ({ data }) => !data.draft);
@@ -105,4 +107,9 @@ const schema = [
       <a href="/cases">다른 시공사례 보기 →</a>
     </p>
   </div>
+
+  <script>
+    import { initBeforeAfterSliders } from '../../scripts/before-after';
+    initBeforeAfterSliders();
+  </script>
 </Layout>

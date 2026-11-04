@@ -69,6 +69,35 @@ export interface CmsApi {
   signedUrls(paths: string[]): Promise<Map<string, string>>;
   /** 본문에서 실제로 쓰인 사진만 글에 연결하고, 빠진 사진은 연결을 끊습니다. */
   syncCasePhotos(caseId: string, usedPaths: string[]): Promise<void>;
+
+  /** 게시 시작. GitHub 임시 브랜치에 올리기까지만 하고 main 반영은 하지 않습니다. */
+  publish(caseId: string): Promise<PublishResult>;
+  /** 게시가 어디까지 갔는지 확인합니다. 게시 완료는 공개 주소 확인까지 끝난 뒤입니다. */
+  publishStatus(caseId: string): Promise<PublishStatus>;
+}
+
+/** 게시 진행 단계. supabase/migrations/0007_publish_state.sql 과 같은 값입니다. */
+export type PublishState =
+  | 'ready'
+  | 'checking'
+  | 'verifying'
+  | 'deploying'
+  | 'published'
+  | 'failed';
+
+export interface PublishResult {
+  ok: boolean;
+  state?: PublishState;
+  /** 서버가 막은 이유들 */
+  problems?: string[];
+  error?: string;
+  slug?: string;
+}
+
+export interface PublishStatus {
+  state: PublishState | null;
+  url?: string;
+  error?: string;
 }
 
 const SIGNED_URL_TTL = 60 * 60; // 1시간
@@ -230,6 +259,29 @@ const supabaseApi: CmsApi = {
       if (row.path && row.signedUrl) map.set(row.path, row.signedUrl);
     }
     return map;
+  },
+
+  async publish(caseId) {
+    const c = clientOrThrow();
+    const { data, error } = await c.functions.invoke('publish-case', { body: { caseId } });
+    if (error) {
+      // Edge Function 이 422/500 으로 답하면 본문에 이유가 들어 있습니다.
+      let detail: { error?: string; problems?: string[] } = {};
+      try {
+        detail = await (error as unknown as { context?: Response }).context?.json?.();
+      } catch {
+        /* 본문이 없으면 그냥 넘어갑니다 */
+      }
+      return { ok: false, error: detail.error ?? error.message, problems: detail.problems };
+    }
+    return { ok: true, ...(data as Record<string, unknown>) } as PublishResult;
+  },
+
+  async publishStatus(caseId) {
+    const c = clientOrThrow();
+    const { data, error } = await c.functions.invoke('publish-status', { body: { caseId } });
+    if (error) return { state: null, error: error.message };
+    return data as PublishStatus;
   },
 
   async syncCasePhotos(caseId, usedPaths) {

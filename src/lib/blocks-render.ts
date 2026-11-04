@@ -28,6 +28,33 @@ export function inlineToHtml(raw: string): string {
 
 export type ResolveUrl = (storagePath: string) => string | undefined;
 
+/**
+ * 시공 전후 비교 슬라이더 마크업.
+ *
+ * 공개 사이트의 BeforeAfterSlider.astro 와 같은 구조여야 합니다.
+ * 스타일은 src/styles/before-after.css, 동작은 src/scripts/before-after.ts 가 맡습니다.
+ *
+ * 자바스크립트가 돌지 않아도 시공 전/후 사진이 둘 다 화면에 남습니다
+ * (슬라이더가 안 켜지면 before 쪽이 절반 너비로 겹쳐 보일 뿐 사진은 사라지지 않습니다).
+ */
+export function sliderHtml(beforeSrc: string, afterSrc: string, caption?: string): string {
+  const cap = caption?.trim()
+    ? `\n  <figcaption>${escapeHtml(caption.trim())}</figcaption>`
+    : '';
+  return `<figure class="ba-slider">
+  <div class="ba-frame">
+    <img class="ba-img ba-after" src="${escapeHtml(afterSrc)}" alt="시공 후" loading="lazy" />
+    <div class="ba-before-wrap">
+      <img class="ba-img ba-before" src="${escapeHtml(beforeSrc)}" alt="시공 전" loading="lazy" />
+    </div>
+    <span class="ba-tag ba-tag-before">BEFORE</span>
+    <span class="ba-tag ba-tag-after">AFTER</span>
+    <div class="ba-handle" aria-hidden="true"><span class="ba-handle-grip">↔</span></div>
+    <input class="ba-range" type="range" min="0" max="100" value="50" aria-label="시공 전/후 비교 슬라이더" />
+  </div>${cap}
+</figure>`;
+}
+
 function imgTag(path: string, resolve: ResolveUrl, alt = ''): string {
   const url = resolve(path);
   if (!url) {
@@ -79,11 +106,14 @@ export function blocksToHtml(blocks: Block[], resolve: ResolveUrl): string {
 
       case 'beforeAfter': {
         if (!block.before || !block.after) break;
-        // 게시될 마크다운도 사진 두 장이므로 미리보기도 같은 형태로 보여줍니다.
-        parts.push(`<div class="cms-ba">
-  <figure><figcaption>시공 전</figcaption>${imgTag(block.before, resolve, '시공 전')}</figure>
-  <figure><figcaption>시공 후</figcaption>${imgTag(block.after, resolve, '시공 후')}</figure>
-</div>${block.caption ? `<p class="cms-ba-caption">${escapeHtml(block.caption)}</p>` : ''}`);
+        // 실제 게시물과 똑같은 슬라이더 마크업을 씁니다.
+        const beforeUrl = resolve(block.before);
+        const afterUrl = resolve(block.after);
+        parts.push(
+          beforeUrl && afterUrl
+            ? sliderHtml(beforeUrl, afterUrl, block.caption)
+            : '<span class="cms-missing-photo">시공 전후 사진을 불러오지 못했습니다</span>'
+        );
         break;
       }
 
@@ -123,8 +153,11 @@ export function blocksToMarkdown(blocks: Block[], slug: string, resolveName: Res
         }
         break;
       case 'beforeAfter':
-        if (block.before) out.push(`![${block.caption ?? '시공 전'}](${src(block.before)})`);
-        if (block.after) out.push(`![${block.caption ?? '시공 후'}](${src(block.after)})`);
+        // 관리자가 넣은 그 자리에 슬라이더가 그대로 들어갑니다(위로 끌어올리지 않습니다).
+        // 마크다운 안의 HTML 은 앞뒤로 빈 줄이 있어야 그대로 출력됩니다.
+        if (block.before && block.after) {
+          out.push(sliderHtml(src(block.before), src(block.after), block.caption));
+        }
         break;
       case 'divider':
         out.push('---');
@@ -133,4 +166,61 @@ export function blocksToMarkdown(blocks: Block[], slug: string, resolveName: Res
   }
 
   return out.join('\n\n');
+}
+
+// ---------------------------------------------------------------------
+// frontmatter
+// ---------------------------------------------------------------------
+
+export interface CaseRecord {
+  slug: string;
+  title: string;
+  category: string;
+  case_date: string;
+  vehicle: string | null;
+  summary: string | null;
+  before_condition: string | null;
+  work_performed: string[] | null;
+  duration: string | null;
+  price_note: string | null;
+  content_blocks: Block[] | null;
+}
+
+function yaml(value: string): string {
+  // 큰따옴표로 감싸므로 역슬래시와 큰따옴표만 막으면 됩니다.
+  return String(value ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+/** 기존 38건과 같은 순서·형식의 frontmatter 를 만듭니다. */
+export function buildFrontmatter(c: CaseRecord): string {
+  const lines = [
+    '---',
+    `title: "${yaml(c.title)}"`,
+    `category: "${c.category}"`,
+    `date: ${c.case_date}`,
+  ];
+
+  if (c.vehicle?.trim()) lines.push(`vehicle: "${yaml(c.vehicle.trim())}"`);
+  if (c.summary?.trim()) lines.push(`summary: "${yaml(c.summary.trim())}"`);
+  if (c.before_condition?.trim()) {
+    lines.push(`beforeCondition: "${yaml(c.before_condition.trim())}"`);
+  }
+
+  const work = (c.work_performed ?? []).filter((w) => w?.trim());
+  if (work.length > 0) {
+    lines.push('workPerformed:');
+    for (const w of work) lines.push(`  - "${yaml(w.trim())}"`);
+  }
+
+  if (c.duration?.trim()) lines.push(`duration: "${yaml(c.duration.trim())}"`);
+  if (c.price_note?.trim()) lines.push(`priceNote: "${yaml(c.price_note.trim())}"`);
+
+  lines.push('draft: false', '---');
+  return lines.join('\n');
+}
+
+/** 저장소에 들어갈 파일 전체 내용. */
+export function buildMarkdownFile(c: CaseRecord, resolveName: ResolveName): string {
+  const body = blocksToMarkdown(c.content_blocks ?? [], c.slug, resolveName);
+  return `${buildFrontmatter(c)}\n\n${body}\n`;
 }
