@@ -190,23 +190,44 @@ Deno.serve(async (req) => {
     const baseBranch = Deno.env.get('GITHUB_BRANCH') ?? 'main';
     if (!token || !repo) throw new Error('GitHub 설정이 없습니다. Secret 을 확인해주세요.');
 
+    /**
+     * GitHub 호출.
+     *
+     * 5xx 는 GitHub 쪽 일시적인 문제일 때가 많아 잠깐 쉬었다 다시 시도합니다.
+     * 그래도 안 되면 원인을 찾을 수 있도록 상태·요청 ID·응답 일부를 남깁니다.
+     * 토큰은 어떤 경우에도 메시지에 들어가지 않습니다.
+     */
     const gh = async (path: string, init?: RequestInit) => {
-      const res = await fetch(`${GITHUB_API}/${path}`, {
-        ...init,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-          'User-Agent': 'kidari-cms',
-          ...(init?.headers ?? {}),
-        },
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        // 토큰이 메시지에 섞여 나가지 않도록 상태코드와 경로만 남깁니다.
-        throw new Error(`GitHub ${init?.method ?? 'GET'} ${path} 실패 (${res.status}): ${text.slice(0, 300)}`);
+      const method = init?.method ?? 'GET';
+      let last = '';
+
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        const res = await fetch(`${GITHUB_API}/${path}`, {
+          ...init,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/vnd.github+json',
+            'Content-Type': 'application/json',
+            'User-Agent': 'kidari-cms',
+            ...(init?.headers ?? {}),
+          },
+        });
+
+        if (res.ok) return res.json();
+
+        const text = (await res.text()).slice(0, 300);
+        const requestId = res.headers.get('x-github-request-id') ?? '-';
+        last =
+          `GitHub ${method} ${path} 실패 (${res.status} ${res.statusText || '-'})` +
+          ` [시도 ${attempt}/3, 요청ID ${requestId}]` +
+          (text ? `: ${text}` : ' — 응답 본문 없음');
+
+        // 4xx 는 다시 시도해도 같은 결과입니다.
+        if (res.status < 500) break;
+        if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 1500));
       }
-      return res.json();
+
+      throw new Error(last);
     };
 
     const ref = await gh(`repos/${repo}/git/ref/heads/${baseBranch}`);
@@ -241,11 +262,17 @@ Deno.serve(async (req) => {
     }
 
     for (const f of files) {
-      const blob = await gh(`repos/${repo}/git/blobs`, {
-        method: 'POST',
-        body: JSON.stringify({ content: f.base64, encoding: 'base64' }),
-      });
-      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+      try {
+        const blob = await gh(`repos/${repo}/git/blobs`, {
+          method: 'POST',
+          body: JSON.stringify({ content: f.base64, encoding: 'base64' }),
+        });
+        tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+      } catch (e) {
+        // 어느 파일에서 막혔는지 알 수 있게 파일 이름과 크기를 덧붙입니다.
+        const kb = Math.round((f.base64.length * 3) / 4 / 1024);
+        throw new Error(`${(e as Error).message}\n(파일: ${f.path}, 약 ${kb}KB)`);
+      }
     }
 
     const treeRes = await gh(`repos/${repo}/git/trees`, {
