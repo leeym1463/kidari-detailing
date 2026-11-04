@@ -61,8 +61,8 @@ export class BlockEditor {
   private render(): void {
     const body = this.blocks.map((b, i) => this.renderBlock(b, i)).join('');
     this.root.innerHTML = `
-      <div class="ad-blocks">${body || this.renderEmpty()}</div>
-      <div class="ad-add-row" role="group" aria-label="본문에 블록 추가">
+      <div class="kd-admin-blocks">${body || this.renderEmpty()}</div>
+      <div class="kd-admin-add-row" role="group" aria-label="본문에 블록 추가">
         ${ADDABLE.map(
           (t) =>
             `<button type="button" data-add="${t}" aria-label="${BLOCK_LABELS[t]} 추가">+ ${BLOCK_LABELS[t]}</button>`
@@ -71,7 +71,7 @@ export class BlockEditor {
   }
 
   private renderEmpty(): string {
-    return `<p class="ad-empty" style="padding:22px 10px;">
+    return `<p class="kd-admin-empty" style="padding:22px 10px;">
       아직 내용이 없습니다. 아래 버튼으로 본문 텍스트나 사진을 추가해보세요.
     </p>`;
   }
@@ -91,13 +91,13 @@ export class BlockEditor {
     const kind = BLOCK_LABELS[block.type];
 
     const tools = `
-      <span class="ad-block-tools">
+      <span class="kd-admin-block-tools">
         <button type="button" data-act="up" data-i="${index}" aria-label="${kind} 위로 이동" ${index === 0 ? 'disabled' : ''}>↑ 위로</button>
         <button type="button" data-act="down" data-i="${index}" aria-label="${kind} 아래로 이동" ${last ? 'disabled' : ''}>↓ 아래로</button>
         <button type="button" class="danger" data-act="remove" data-i="${index}" aria-label="${kind} 삭제">삭제</button>
       </span>`;
 
-    const head = `<div class="ad-block-head"><span class="ad-block-kind">${kind}</span>${tools}</div>`;
+    const head = `<div class="kd-admin-block-head"><span class="kd-admin-block-kind">${kind}</span>${tools}</div>`;
 
     let body = '';
 
@@ -105,13 +105,13 @@ export class BlockEditor {
       case 'paragraph': {
         const align: TextAlign = block.align ?? 'left';
         body = `
-          <div class="ad-text-tools" role="group" aria-label="글자 꾸미기">
+          <div class="kd-admin-text-tools" role="group" aria-label="글자 꾸미기">
             <button type="button" data-act="bold" data-i="${index}" aria-label="선택한 글자 굵게"><b>굵게</b></button>
             <button type="button" data-act="link" data-i="${index}" aria-label="선택한 글자에 링크 넣기">링크</button>
             <button type="button" data-act="align" data-align="left" data-i="${index}" aria-pressed="${align === 'left'}" aria-label="왼쪽 정렬">왼쪽</button>
             <button type="button" data-act="align" data-align="center" data-i="${index}" aria-pressed="${align === 'center'}" aria-label="가운데 정렬">가운데</button>
           </div>
-          <label class="ad-label" for="blk-${index}">본문 텍스트</label>
+          <label class="kd-admin-label" for="blk-${index}">본문 텍스트</label>
           <textarea id="blk-${index}" data-field="text" data-i="${index}" aria-label="본문 텍스트"
             placeholder="시공 내용을 적어주세요.">${escapeHtml(block.text ?? '')}</textarea>`;
         break;
@@ -119,7 +119,7 @@ export class BlockEditor {
 
       case 'heading':
         body = `
-          <label class="ad-label" for="blk-${index}">소제목</label>
+          <label class="kd-admin-label" for="blk-${index}">소제목</label>
           <input id="blk-${index}" type="text" data-field="text" data-i="${index}"
             aria-label="소제목" placeholder="예) 시공 전 상태"
             value="${escapeHtml(block.text ?? '')}" />`;
@@ -127,16 +127,16 @@ export class BlockEditor {
 
       case 'image':
         body = `
-          <div class="ad-slot-row">
-            <div class="ad-slot">
+          <div class="kd-admin-slot-row">
+            <div class="kd-admin-slot">
               <span class="slot-name">사진</span>
               ${this.frame(block.path, '선택한 사진')}
-              <button type="button" class="ad-btn ad-btn-sm" data-act="pick-one" data-i="${index}" aria-label="사진 추가">
+              <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-one" data-i="${index}" aria-label="사진 추가">
                 ${block.path ? '사진 바꾸기' : '사진 고르기'}
               </button>
             </div>
           </div>
-          <label class="ad-label" for="cap-${index}" style="margin-top:10px;">사진 설명 (선택)</label>
+          <label class="kd-admin-label" for="cap-${index}" style="margin-top:10px;">사진 설명 (선택)</label>
           <input id="cap-${index}" type="text" data-field="caption" data-i="${index}"
             aria-label="사진 설명" placeholder="예) 보닛 스월마크"
             value="${escapeHtml(block.caption ?? '')}" />`;
@@ -148,54 +148,54 @@ export class BlockEditor {
           items.length > 0
             ? items
                 .map(
-                  (it, n) => `<div class="ad-slot">
+                  (it, n) => `<div class="kd-admin-slot">
                     <span class="slot-name">${n + 1}번째</span>
                     ${this.frame(it.path, `${n + 1}번째 사진`)}
-                    <button type="button" class="ad-btn ad-btn-sm ad-btn-danger" data-act="group-remove" data-i="${index}" data-n="${n}" aria-label="${n + 1}번째 사진 빼기">빼기</button>
+                    <button type="button" class="kd-admin-btn kd-admin-btn-sm kd-admin-btn-danger" data-act="group-remove" data-i="${index}" data-n="${n}" aria-label="${n + 1}번째 사진 빼기">빼기</button>
                   </div>`
                 )
                 .join('')
-            : '<div class="ad-slot"><span class="slot-name">사진 없음</span>' +
+            : '<div class="kd-admin-slot"><span class="slot-name">사진 없음</span>' +
               this.frame(undefined, '비어 있음') +
               '</div>';
         body = `
-          <div class="ad-slot-row">${slots}</div>
-          <div class="ad-btn-row" style="margin-top:10px;">
-            <button type="button" class="ad-btn ad-btn-sm" data-act="pick-many" data-i="${index}" aria-label="사진 추가">사진 더 고르기</button>
+          <div class="kd-admin-slot-row">${slots}</div>
+          <div class="kd-admin-btn-row" style="margin-top:10px;">
+            <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-many" data-i="${index}" aria-label="사진 추가">사진 더 고르기</button>
           </div>`;
         break;
       }
 
       case 'beforeAfter':
         body = `
-          <div class="ad-slot-row">
-            <div class="ad-slot">
+          <div class="kd-admin-slot-row">
+            <div class="kd-admin-slot">
               <span class="slot-name">Before 사진</span>
               ${this.frame(block.before, 'Before 사진')}
-              <button type="button" class="ad-btn ad-btn-sm" data-act="pick-before" data-i="${index}" aria-label="Before 사진 고르기">
+              <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-before" data-i="${index}" aria-label="Before 사진 고르기">
                 ${block.before ? '바꾸기' : '고르기'}
               </button>
             </div>
-            <div class="ad-slot">
+            <div class="kd-admin-slot">
               <span class="slot-name">After 사진</span>
               ${this.frame(block.after, 'After 사진')}
-              <button type="button" class="ad-btn ad-btn-sm" data-act="pick-after" data-i="${index}" aria-label="After 사진 고르기">
+              <button type="button" class="kd-admin-btn kd-admin-btn-sm" data-act="pick-after" data-i="${index}" aria-label="After 사진 고르기">
                 ${block.after ? '바꾸기' : '고르기'}
               </button>
             </div>
           </div>
-          <label class="ad-label" for="cap-${index}" style="margin-top:10px;">비교 설명 (선택)</label>
+          <label class="kd-admin-label" for="cap-${index}" style="margin-top:10px;">비교 설명 (선택)</label>
           <input id="cap-${index}" type="text" data-field="caption" data-i="${index}"
             aria-label="Before After 설명" placeholder="예) 운전석 도어"
             value="${escapeHtml(block.caption ?? '')}" />`;
         break;
 
       case 'divider':
-        body = '<div class="ad-block-divider" role="presentation"></div>';
+        body = '<div class="kd-admin-block-divider" role="presentation"></div>';
         break;
     }
 
-    return `<section class="ad-block" data-i="${index}" aria-label="${kind} 블록">${head}${body}</section>`;
+    return `<section class="kd-admin-block" data-i="${index}" aria-label="${kind} 블록">${head}${body}</section>`;
   }
 
   // -----------------------------------------------------------------

@@ -97,10 +97,10 @@ export class PhotoGallery {
 
     if (this.photos.length === 0) {
       grid.innerHTML = '';
-      empty?.classList.remove('ad-hide');
+      empty?.classList.remove('kd-admin-hide');
       return;
     }
-    empty?.classList.add('ad-hide');
+    empty?.classList.add('kd-admin-hide');
 
     grid.innerHTML = this.photos
       .map((p) => {
@@ -111,8 +111,8 @@ export class PhotoGallery {
         const used = Boolean(p.case_id);
         const usedTitle = p.case_id ? (this.caseTitles.get(p.case_id) ?? '작성 중인 글') : '';
         const badge = used
-          ? `<span class="ad-badge ad-badge-used">사용 중</span>`
-          : `<span class="ad-badge ad-badge-free">미사용</span>`;
+          ? `<span class="kd-admin-badge kd-admin-badge-used">사용 중</span>`
+          : `<span class="kd-admin-badge kd-admin-badge-free">미사용</span>`;
 
         const left = daysUntilCleanup(p.created_at);
         const cleanupNote = used
@@ -132,20 +132,20 @@ export class PhotoGallery {
           ? `<img src="${escapeHtml(url)}" alt="" loading="lazy" decoding="async" />`
           : '';
 
-        return `<figure class="ad-photo-card${isPicked ? ' is-picked' : ''}" data-path="${escapeHtml(p.storage_path)}">
-  <button type="button" class="ad-photo-thumb" data-act="pick" aria-label="${label}" aria-pressed="${selectable ? String(isPicked) : 'false'}">
+        return `<figure class="kd-admin-photo-card${isPicked ? ' is-picked' : ''}" data-path="${escapeHtml(p.storage_path)}">
+  <button type="button" class="kd-admin-photo-thumb" data-act="pick" aria-label="${label}" aria-pressed="${selectable ? String(isPicked) : 'false'}">
     ${thumb}
   </button>
-  <figcaption class="ad-photo-body">
-    <span>${badge}${isPicked ? ` <span class="ad-badge ad-badge-used">${pickIndex + 1}번째</span>` : ''}</span>
-    <span class="ad-photo-meta">
+  <figcaption class="kd-admin-photo-body">
+    <span>${badge}${isPicked ? ` <span class="kd-admin-badge kd-admin-badge-used">${pickIndex + 1}번째</span>` : ''}</span>
+    <span class="kd-admin-photo-meta">
       ${formatDate(p.created_at)}${size ? ' · ' + size : ''}${bytes ? ' · ' + bytes : ''}<br />
       ${cleanupNote}
     </span>
     ${
       deletable
-        ? `<span class="ad-photo-actions">
-             <button type="button" class="ad-btn ad-btn-sm ad-btn-danger" data-act="delete" aria-label="이 사진 삭제">삭제</button>
+        ? `<span class="kd-admin-photo-actions">
+             <button type="button" class="kd-admin-btn kd-admin-btn-sm kd-admin-btn-danger" data-act="delete" aria-label="이 사진 삭제">삭제</button>
            </span>`
         : ''
     }
@@ -163,7 +163,7 @@ export class PhotoGallery {
     const target = event.target as HTMLElement;
     const button = target.closest<HTMLButtonElement>('button[data-act]');
     if (!button) return;
-    const card = button.closest<HTMLElement>('.ad-photo-card');
+    const card = button.closest<HTMLElement>('.kd-admin-photo-card');
     const path = card?.dataset.path;
     if (!path) return;
     const photo = this.photos.find((p) => p.storage_path === path);

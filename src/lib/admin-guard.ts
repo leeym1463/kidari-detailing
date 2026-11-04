@@ -25,16 +25,16 @@ export interface BootOptions {
  *  · 로그인했지만 관리자가 아니면 로그아웃시킵니다
  */
 export async function bootAdmin(opts: BootOptions = {}): Promise<AdminSession | null> {
-  const boot = maybe('ad-boot');
-  const app = maybe('ad-app');
+  const boot = maybe('kd-admin-boot');
+  const app = maybe('kd-admin-app');
 
   if (!isConfigured) {
     notice(
-      maybe('ad-boot-message'),
+      maybe('kd-admin-boot-message'),
       '관리자 화면 설정값이 아직 등록되지 않았습니다. 잠시 후 다시 시도해주세요.',
       'warn'
     );
-    show(maybe('ad-boot-spinner'), false);
+    show(maybe('kd-admin-boot-spinner'), false);
     return null;
   }
 
@@ -44,8 +44,8 @@ export async function bootAdmin(opts: BootOptions = {}): Promise<AdminSession | 
   try {
     email = await api.currentEmail();
   } catch (e) {
-    notice(maybe('ad-boot-message'), friendlyError(e), 'error');
-    show(maybe('ad-boot-spinner'), false);
+    notice(maybe('kd-admin-boot-message'), friendlyError(e), 'error');
+    show(maybe('kd-admin-boot-spinner'), false);
     return null;
   }
 
@@ -68,10 +68,10 @@ export async function bootAdmin(opts: BootOptions = {}): Promise<AdminSession | 
   }
 
   // 헤더의 계정 표시와 로그아웃 버튼 연결
-  const emailNode = maybe('ad-account-email');
+  const emailNode = maybe('kd-admin-account-email');
   if (emailNode) emailNode.textContent = email;
 
-  const logout = maybe<HTMLButtonElement>('ad-logout');
+  const logout = maybe<HTMLButtonElement>('kd-admin-logout');
   if (logout) {
     logout.addEventListener('click', async () => {
       logout.disabled = true;
@@ -87,7 +87,7 @@ export async function bootAdmin(opts: BootOptions = {}): Promise<AdminSession | 
 
   // 개발용 가짜 저장소로 돌아가고 있으면 눈에 보이게 표시합니다.
   if (api.mode === 'mock') {
-    notice(maybe('ad-mode-banner'), '개발용 가짜 저장소로 동작 중입니다 (?mock=1)', 'info');
+    notice(maybe('kd-admin-mode-banner'), '개발용 가짜 저장소로 동작 중입니다 (?mock=1)', 'info');
   }
 
   show(boot, false);

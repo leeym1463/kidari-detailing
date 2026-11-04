@@ -21,7 +21,7 @@ export function maybe<T extends HTMLElement = HTMLElement>(id: string): T | null
 }
 
 export function show(node: HTMLElement | null, visible = true): void {
-  if (node) node.classList.toggle('ad-hide', !visible);
+  if (node) node.classList.toggle('kd-admin-hide', !visible);
 }
 
 /** HTML 로 넣을 문자열을 안전하게 바꿉니다. */
@@ -40,18 +40,18 @@ export function escapeHtml(s: string): string {
 
 /** 화면 아래에 잠깐 뜨는 알림. */
 export function toast(message: string, kind: 'info' | 'ok' | 'error' = 'info'): void {
-  let host = document.getElementById('ad-toast-host');
+  let host = document.getElementById('kd-admin-toast-host');
   if (!host) {
     host = document.createElement('div');
-    host.id = 'ad-toast-host';
-    host.className = 'ad-toast-host';
+    host.id = 'kd-admin-toast-host';
+    host.className = 'kd-admin-toast-host';
     // 스크린리더와 Aside 가 변화를 인지할 수 있도록 알림 영역으로 선언합니다.
     host.setAttribute('role', 'status');
     host.setAttribute('aria-live', 'polite');
     document.body.appendChild(host);
   }
   const item = document.createElement('div');
-  item.className = 'ad-toast' + (kind === 'info' ? '' : ' ad-toast-' + kind);
+  item.className = 'kd-admin-toast' + (kind === 'info' ? '' : ' kd-admin-toast-' + kind);
   item.textContent = message;
   host.appendChild(item);
   setTimeout(() => item.remove(), 3200);
@@ -65,8 +65,8 @@ export function notice(
 ): void {
   if (!node) return;
   node.textContent = message;
-  node.className = 'ad-notice ad-notice-' + kind;
-  node.classList.toggle('ad-hide', !message);
+  node.className = 'kd-admin-notice kd-admin-notice-' + kind;
+  node.classList.toggle('kd-admin-hide', !message);
 }
 
 // ---------------------------------------------------------------------

@@ -15,30 +15,30 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
 ---
 
 <AdminLayout title="시공사례 작성" nav="cases">
-  <div class="ad-editor-bar">
+  <div class="kd-admin-editor-bar">
     <div class="inner">
       <span class="title" id="bar-title">새 시공사례</span>
-      <span class="ad-save-state" id="save-state" role="status" aria-live="polite"></span>
-      <button type="button" id="btn-save" class="ad-btn ad-btn-primary ad-btn-sm" aria-label="임시저장">
+      <span class="kd-admin-save-state" id="save-state" role="status" aria-live="polite"></span>
+      <button type="button" id="btn-save" class="kd-admin-btn kd-admin-btn-primary kd-admin-btn-sm" aria-label="임시저장">
         임시저장
       </button>
-      <a id="btn-preview" class="ad-btn ad-btn-sm" href="#" aria-label="미리보기">미리보기</a>
-      <button type="button" id="btn-open-panel" class="ad-btn ad-btn-sm" aria-label="사진함 열기">
+      <a id="btn-preview" class="kd-admin-btn kd-admin-btn-sm" href="#" aria-label="미리보기">미리보기</a>
+      <button type="button" id="btn-open-panel" class="kd-admin-btn kd-admin-btn-sm" aria-label="사진함 열기">
         사진함
       </button>
-      <a class="ad-btn ad-btn-sm" href="/admin/cases" aria-label="목록으로 돌아가기">목록</a>
+      <a class="kd-admin-btn kd-admin-btn-sm" href="/admin/cases" aria-label="목록으로 돌아가기">목록</a>
     </div>
   </div>
 
-  <p id="edit-error" class="ad-notice ad-hide" role="alert"></p>
+  <p id="edit-error" class="kd-admin-notice kd-admin-hide" role="alert"></p>
 
-  <div class="ad-editor-grid with-panel" id="editor-grid">
+  <div class="kd-admin-editor-grid with-panel" id="editor-grid">
     <div>
       <!-- ============ 제목 ============ -->
-      <div class="ad-title-field">
+      <div class="kd-admin-title-field">
         <input
           id="f-title"
-          class="ad-title-input"
+          class="kd-admin-title-input"
           type="text"
           maxlength="120"
           aria-label="시공사례 제목"
@@ -48,82 +48,82 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
       </div>
 
       <!-- ============ 본문 ============ -->
-      <div class="ad-body-card">
+      <div class="kd-admin-body-card">
         <div id="block-editor" aria-label="본문"></div>
       </div>
 
       <!-- ============ 기본정보 (접힘) ============ -->
-      <details class="ad-section ad-meta" id="basic-section">
+      <details class="kd-admin-section kd-admin-meta" id="basic-section">
         <summary aria-label="기본정보 펼치기 또는 접기">기본정보</summary>
         <div class="body">
-          <p class="ad-small ad-muted" style="margin:0 0 16px;">
+          <p class="kd-admin-small kd-admin-muted" style="margin:0 0 16px;">
             글을 쓰는 데 꼭 필요하지는 않습니다. 비워두어도 임시저장됩니다.
           </p>
 
-          <div class="ad-meta-grid">
-            <div class="ad-field">
+          <div class="kd-admin-meta-grid">
+            <div class="kd-admin-field">
               <label for="f-category">카테고리</label>
-              <select id="f-category" class="ad-select" aria-label="카테고리">
+              <select id="f-category" class="kd-admin-select" aria-label="카테고리">
                 {CASE_CATEGORIES.map((c) => <option value={c}>{c}</option>)}
               </select>
             </div>
 
-            <div class="ad-field">
+            <div class="kd-admin-field">
               <label for="f-date">작업일</label>
-              <input id="f-date" class="ad-input" type="date" aria-label="작업일" />
+              <input id="f-date" class="kd-admin-input" type="date" aria-label="작업일" />
             </div>
 
-            <div class="ad-field">
+            <div class="kd-admin-field">
               <label for="f-vehicle">차량명</label>
-              <input id="f-vehicle" class="ad-input" type="text" maxlength="80" aria-label="차량명"
+              <input id="f-vehicle" class="kd-admin-input" type="text" maxlength="80" aria-label="차량명"
                 placeholder="예) BMW 740i" />
             </div>
 
-            <div class="ad-field">
+            <div class="kd-admin-field">
               <label for="f-color">차량 색상</label>
-              <input id="f-color" class="ad-input" type="text" maxlength="40" aria-label="차량 색상"
+              <input id="f-color" class="kd-admin-input" type="text" maxlength="40" aria-label="차량 색상"
                 placeholder="예) 알파인 화이트" />
             </div>
           </div>
 
-          <div class="ad-field" style="margin-bottom:0;">
+          <div class="kd-admin-field" style="margin-bottom:0;">
             <label for="f-blog">네이버 블로그 URL</label>
-            <input id="f-blog" class="ad-input" type="url" inputmode="url"
+            <input id="f-blog" class="kd-admin-input" type="url" inputmode="url"
               aria-label="네이버 블로그 URL" placeholder="https://blog.naver.com/..." />
-            <p class="ad-hint">블로그 글을 옮겨 적었다면 원본 주소를 남겨두세요.</p>
+            <p class="kd-admin-hint">블로그 글을 옮겨 적었다면 원본 주소를 남겨두세요.</p>
           </div>
         </div>
       </details>
     </div>
 
     <!-- ============ 사진함 패널 ============ -->
-    <aside class="ad-panel ad-hide" id="photo-panel" aria-label="사진함">
-      <div class="ad-panel-head">
+    <aside class="kd-admin-panel kd-admin-hide" id="photo-panel" aria-label="사진함">
+      <div class="kd-admin-panel-head">
         <h2 id="panel-title">사진함</h2>
-        <button type="button" id="panel-close" class="ad-btn ad-btn-sm" style="margin-left:auto;"
+        <button type="button" id="panel-close" class="kd-admin-btn kd-admin-btn-sm" style="margin-left:auto;"
           aria-label="사진함 닫기">닫기</button>
       </div>
 
-      <div class="ad-panel-body">
-        <p class="ad-panel-hint" id="panel-hint">글에 넣을 사진을 미리 올려두세요.</p>
+      <div class="kd-admin-panel-body">
+        <p class="kd-admin-panel-hint" id="panel-hint">글에 넣을 사진을 미리 올려두세요.</p>
 
-        <label class="ad-btn ad-btn-sm ad-btn-block" for="panel-upload" aria-label="사진 추가">
+        <label class="kd-admin-btn kd-admin-btn-sm kd-admin-btn-block" for="panel-upload" aria-label="사진 추가">
           사진 추가
         </label>
         <input id="panel-upload" type="file" accept="image/*" multiple aria-label="올릴 사진 선택"
           style="position:absolute;width:1px;height:1px;opacity:0;" />
-        <ul class="ad-progress" id="panel-progress" aria-live="polite"></ul>
+        <ul class="kd-admin-progress" id="panel-progress" aria-live="polite"></ul>
 
-        <div class="ad-photo-grid" id="panel-grid" style="margin-top:14px;"></div>
-        <div class="ad-empty ad-hide" id="panel-empty">
+        <div class="kd-admin-photo-grid" id="panel-grid" style="margin-top:14px;"></div>
+        <div class="kd-admin-empty kd-admin-hide" id="panel-empty">
           <p>사진함이 비어 있습니다.</p>
         </div>
       </div>
 
-      <div class="ad-panel-foot ad-hide" id="panel-foot">
-        <button type="button" id="panel-confirm" class="ad-btn ad-btn-primary ad-btn-sm"
+      <div class="kd-admin-panel-foot kd-admin-hide" id="panel-foot">
+        <button type="button" id="panel-confirm" class="kd-admin-btn kd-admin-btn-primary kd-admin-btn-sm"
           aria-label="고른 사진 넣기">선택한 사진 넣기</button>
-        <button type="button" id="panel-cancel" class="ad-btn ad-btn-sm"
+        <button type="button" id="panel-cancel" class="kd-admin-btn kd-admin-btn-sm"
           aria-label="사진 고르기 취소">취소</button>
       </div>
     </aside>
@@ -318,7 +318,7 @@ import { CASE_CATEGORIES } from '../../../lib/cms-types';
 
     function setState(text: string, kind: '' | 'saving' | 'saved' | 'error') {
       stateNode.textContent = text;
-      stateNode.className = 'ad-save-state' + (kind ? ' is-' + kind : '');
+      stateNode.className = 'kd-admin-save-state' + (kind ? ' is-' + kind : '');
     }
 
     function collect() {

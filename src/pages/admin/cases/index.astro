@@ -5,19 +5,19 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 ---
 
 <AdminLayout title="시공사례" nav="cases">
-  <div class="ad-page-head">
+  <div class="kd-admin-page-head">
     <h1>시공사례</h1>
     <p>작성한 글을 확인하고 이어서 수정할 수 있습니다.</p>
   </div>
 
-  <div class="ad-btn-row" style="margin-bottom:18px;">
-    <a class="ad-btn ad-btn-primary" href="/admin/cases/edit" aria-label="새 시공사례 작성">
+  <div class="kd-admin-btn-row" style="margin-bottom:18px;">
+    <a class="kd-admin-btn kd-admin-btn-primary" href="/admin/cases/edit" aria-label="새 시공사례 작성">
       새 시공사례 작성
     </a>
   </div>
 
-  <div class="ad-card">
-    <div class="ad-filter-row" role="group" aria-label="상태로 거르기">
+  <div class="kd-admin-card">
+    <div class="kd-admin-filter-row" role="group" aria-label="상태로 거르기">
       <button type="button" data-filter="all" aria-pressed="true" aria-label="전체 보기">전체</button>
       <button type="button" data-filter="draft" aria-pressed="false" aria-label="임시저장만 보기">
         임시저장
@@ -27,17 +27,17 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
       </button>
     </div>
 
-    <ul class="ad-case-list" id="case-list"></ul>
+    <ul class="kd-admin-case-list" id="case-list"></ul>
 
-    <div class="ad-empty ad-hide" id="case-empty">
+    <div class="kd-admin-empty kd-admin-hide" id="case-empty">
       <p id="case-empty-text">아직 작성한 글이 없습니다.</p>
-      <a class="ad-btn ad-btn-primary" href="/admin/cases/edit" aria-label="첫 시공사례 작성하기">
+      <a class="kd-admin-btn kd-admin-btn-primary" href="/admin/cases/edit" aria-label="첫 시공사례 작성하기">
         첫 시공사례 작성하기
       </a>
     </div>
   </div>
 
-  <p class="ad-small ad-muted" style="margin-top:18px;">
+  <p class="kd-admin-small kd-admin-muted" style="margin-top:18px;">
     공개 홈페이지에 이미 올라가 있는 기존 시공사례는 여기에 표시되지 않습니다. 그대로 유지됩니다.
   </p>
 </AdminLayout>
@@ -96,26 +96,26 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
             : '사진 없음';
           const badge =
             c.status === 'published'
-              ? '<span class="ad-badge ad-badge-pub">게시됨</span>'
-              : '<span class="ad-badge ad-badge-draft">임시저장</span>';
+              ? '<span class="kd-admin-badge kd-admin-badge-pub">게시됨</span>'
+              : '<span class="kd-admin-badge kd-admin-badge-draft">임시저장</span>';
           const meta = [c.category, c.vehicle, formatDate(c.case_date)]
             .filter(Boolean)
             .map((v) => escapeHtml(String(v)))
             .join(' · ');
           const editHref = `/admin/cases/edit?id=${encodeURIComponent(c.id)}`;
 
-          return `<li class="ad-case-item" data-id="${escapeHtml(c.id)}">
-  <span class="ad-case-cover">${cover}</span>
-  <div class="ad-case-main">
+          return `<li class="kd-admin-case-item" data-id="${escapeHtml(c.id)}">
+  <span class="kd-admin-case-cover">${cover}</span>
+  <div class="kd-admin-case-main">
     ${badge}
-    <a class="ad-case-title" href="${editHref}">${escapeHtml(c.title || '제목 없음')}</a>
-    <p class="ad-case-meta">${meta}<br />최근 저장 ${formatDate(c.updated_at)}</p>
-    <span class="ad-case-actions">
-      <a class="ad-btn ad-btn-sm" href="${editHref}" aria-label="${escapeHtml(c.title)} 수정">수정</a>
-      <a class="ad-btn ad-btn-sm" href="/admin/cases/preview?id=${encodeURIComponent(c.id)}" aria-label="${escapeHtml(c.title)} 미리보기">미리보기</a>
+    <a class="kd-admin-case-title" href="${editHref}">${escapeHtml(c.title || '제목 없음')}</a>
+    <p class="kd-admin-case-meta">${meta}<br />최근 저장 ${formatDate(c.updated_at)}</p>
+    <span class="kd-admin-case-actions">
+      <a class="kd-admin-btn kd-admin-btn-sm" href="${editHref}" aria-label="${escapeHtml(c.title)} 수정">수정</a>
+      <a class="kd-admin-btn kd-admin-btn-sm" href="/admin/cases/preview?id=${encodeURIComponent(c.id)}" aria-label="${escapeHtml(c.title)} 미리보기">미리보기</a>
       ${
         c.status === 'draft'
-          ? `<button type="button" class="ad-btn ad-btn-sm ad-btn-danger" data-act="delete" aria-label="${escapeHtml(c.title)} 삭제">삭제</button>`
+          ? `<button type="button" class="kd-admin-btn kd-admin-btn-sm kd-admin-btn-danger" data-act="delete" aria-label="${escapeHtml(c.title)} 삭제">삭제</button>`
           : ''
       }
     </span>
@@ -132,7 +132,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
         covers = paths.length > 0 ? await api.signedUrls(paths) : new Map();
         render();
       } catch (e) {
-        notice(maybe('ad-mode-banner'), friendlyError(e), 'error');
+        notice(maybe('kd-admin-mode-banner'), friendlyError(e), 'error');
       }
     }
 
@@ -153,7 +153,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
         'button[data-act="delete"]'
       );
       if (!button) return;
-      const id = button.closest<HTMLElement>('.ad-case-item')?.dataset.id;
+      const id = button.closest<HTMLElement>('.kd-admin-case-item')?.dataset.id;
       const row = rows.find((r) => r.id === id);
       if (!row) return;
 

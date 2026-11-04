@@ -37,17 +37,17 @@ const navItems: { key: Props['nav']; href: string; label: string }[] = [
   <body>
     {
       !bare && (
-        <header class="ad-header">
-          <div class="ad-wrap">
-            <a class="ad-brand" href="/admin" aria-label="관리자 홈으로 이동">
-              <span class="ad-brand-mark" aria-hidden="true">K</span>
+        <header class="kd-admin-header">
+          <div class="kd-admin-wrap">
+            <a class="kd-admin-brand" href="/admin" aria-label="관리자 홈으로 이동">
+              <span class="kd-admin-brand-mark" aria-hidden="true">K</span>
               <span>
                 키다리광택
                 <small>관리자</small>
               </span>
             </a>
 
-            <nav class="ad-nav" aria-label="관리자 메뉴">
+            <nav class="kd-admin-nav" aria-label="관리자 메뉴">
               {
                 navItems.map((item) => (
                   <a href={item.href} aria-current={nav === item.key ? 'page' : undefined}>
@@ -57,11 +57,11 @@ const navItems: { key: Props['nav']; href: string; label: string }[] = [
               }
             </nav>
 
-            <span class="ad-header-spacer"></span>
+            <span class="kd-admin-header-spacer"></span>
 
-            <div class="ad-account">
-              <span id="ad-account-email" aria-label="로그인한 계정"></span>
-              <button type="button" id="ad-logout" class="ad-btn ad-btn-sm" aria-label="로그아웃">
+            <div class="kd-admin-account">
+              <span id="kd-admin-account-email" aria-label="로그인한 계정"></span>
+              <button type="button" id="kd-admin-logout" class="kd-admin-btn kd-admin-btn-sm" aria-label="로그아웃">
                 로그아웃
               </button>
             </div>
@@ -71,15 +71,15 @@ const navItems: { key: Props['nav']; href: string; label: string }[] = [
     }
 
     <!-- 인증 확인 중에 보여줄 화면 -->
-    <div id="ad-boot" class="ad-boot">
-      <div id="ad-boot-spinner" class="ad-spinner" role="presentation"></div>
-      <p id="ad-boot-message" class="ad-notice ad-hide"></p>
+    <div id="kd-admin-boot" class="kd-admin-boot">
+      <div id="kd-admin-boot-spinner" class="kd-admin-spinner" role="presentation"></div>
+      <p id="kd-admin-boot-message" class="kd-admin-notice kd-admin-hide"></p>
     </div>
 
     <!-- 인증이 끝나면 열립니다 -->
-    <main id="ad-app" class={bare ? 'ad-hide' : 'ad-main ad-hide'}>
-      <div class={bare ? '' : 'ad-wrap'}>
-        <p id="ad-mode-banner" class="ad-notice ad-hide"></p>
+    <main id="kd-admin-app" class={bare ? 'kd-admin-hide' : 'kd-admin-main kd-admin-hide'}>
+      <div class={bare ? '' : 'kd-admin-wrap'}>
+        <p id="kd-admin-mode-banner" class="kd-admin-notice kd-admin-hide"></p>
         <slot />
       </div>
     </main>
