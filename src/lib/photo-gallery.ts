@@ -142,10 +142,17 @@ export class PhotoGallery {
           ? `<span class="kd-admin-badge kd-admin-badge-used">사용 중</span>`
           : `<span class="kd-admin-badge kd-admin-badge-free">미사용</span>`;
 
+        // 고르는 창은 칸이 좁아 글자가 넘칩니다. 꼭 필요한 것만 남깁니다.
+        //   · 사용 여부는 위의 배지가 이미 말해줍니다
+        //   · 글 제목은 사진함 전용 화면에서만 보여줍니다
         const left = daysUntilCleanup(p.created_at);
-        const cleanupNote = used
-          ? `${escapeHtml(usedTitle)} 에 사용 중`
-          : `${left}일 후 자동 정리`;
+        const cleanupNote = this.opts.selectable
+          ? used
+            ? ''
+            : `${left}일 후 정리`
+          : used
+            ? `${escapeHtml(usedTitle)} 에 사용 중`
+            : `${left}일 후 자동 정리`;
 
         const size = p.width && p.height ? `${p.width}×${p.height}` : '';
         const bytes = p.bytes ? formatBytes(p.bytes) : '';
@@ -167,8 +174,8 @@ export class PhotoGallery {
   <figcaption class="kd-admin-photo-body">
     <span>${badge} <span class="kd-admin-badge kd-admin-badge-used kd-admin-pick-order${isPicked ? '' : ' kd-admin-hide'}">${isPicked ? pickIndex + 1 + '번째' : ''}</span></span>
     <span class="kd-admin-photo-meta">
-      ${formatDate(p.created_at)}${size ? ' · ' + size : ''}${bytes ? ' · ' + bytes : ''}<br />
-      ${cleanupNote}
+      <span class="kd-admin-photo-size">${formatDate(p.created_at)}${size ? ' · ' + size : ''}${bytes ? ' · ' + bytes : ''}</span>
+      ${cleanupNote ? `<span class="kd-admin-photo-note">${cleanupNote}</span>` : ''}
     </span>
     ${
       deletable

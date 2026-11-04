@@ -795,7 +795,28 @@ img {
   color: var(--kd-admin-muted);
   line-height: 1.45;
   min-width: 0;
-  overflow-wrap: anywhere;
+  /* 한글을 글자 단위로 끊으면 읽을 수 없습니다. 띄어쓰기에서만 줄바꿈합니다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 날짜·크기·용량 한 줄. 좁으면 … 으로 줄입니다. */
+.kd-admin-photo-size {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 보관 안내나 쓰인 글 제목. 두 줄까지만 보여줍니다. */
+.kd-admin-photo-note {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .kd-admin-photo-actions {
   display: flex;
@@ -1233,8 +1254,17 @@ details.kd-admin-section > .body {
   margin: 0 0 12px;
 }
 .kd-admin-panel .kd-admin-photo-grid {
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
+}
+
+/* 고르는 창에서는 사진이 주인공입니다. 글자는 작게 둡니다. */
+.kd-admin-panel .kd-admin-photo-meta {
+  font-size: 0.72rem;
+}
+.kd-admin-panel .kd-admin-photo-body {
+  padding: 8px 9px 10px;
+  gap: 5px;
 }
 
 /* 좁은 화면에서는 글 제목이 저장 상태를 밀어내지 않도록 한 줄을 통째로 씁니다. */
