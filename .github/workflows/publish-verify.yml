@@ -53,7 +53,7 @@ jobs:
           set -euo pipefail
           slug="${GITHUB_REF_NAME#publish/}"
           slug="${slug%-*}"          # 뒤에 붙인 시각 제거
-          page="dist/cases/${slug}/index.html"
+          page="dist/cases/${slug}.html"
           if [ ! -f "$page" ]; then
             echo "::error::빌드는 됐지만 공개 페이지가 없습니다: ${page}"
             echo "만들어진 시공사례 페이지 목록:"

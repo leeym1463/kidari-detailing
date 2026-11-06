@@ -21,7 +21,7 @@ const SOURCE_IMAGES = 'public/images/cases/gwangtaek-10-2026-09-02-bmw7series';
 function cleanup() {
   fs.rmSync(CASE_FILE, { force: true });
   fs.rmSync(IMAGE_DIR, { recursive: true, force: true });
-  fs.rmSync(`dist/cases/${SLUG}`, { recursive: true, force: true });
+  fs.rmSync(`dist/cases/${SLUG}.html`, { force: true });
 }
 
 async function loadEdgeRender() {
@@ -112,7 +112,7 @@ try {
   check('빌드 성공', /Complete!/.test(log), (log.match(/(\d+) page\(s\) built/) ?? [])[0] ?? '');
 
   // 3) 만들어진 공개 페이지 확인
-  const pagePath = `dist/cases/${SLUG}/index.html`;
+  const pagePath = `dist/cases/${SLUG}.html`;
   const exists = fs.existsSync(pagePath);
   check('공개 페이지 생성', exists, pagePath);
 
@@ -124,7 +124,7 @@ try {
     check('슬라이더 CSS 포함', html.includes('.ba-frame'));
     check('사진 5장 모두 참조', (html.match(new RegExp(`/images/cases/${SLUG}/img-`, 'g')) ?? []).length >= 5);
     check('입고상태 꼭지 숨김', !html.includes('시공 전 상태</h2>'));
-    check('목록에도 올라감', fs.readFileSync('dist/cases/index.html', 'utf8').includes(SLUG));
+    check('목록에도 올라감', fs.readFileSync('dist/cases.html', 'utf8').includes(SLUG));
   }
 } catch (e) {
   check('예외 없이 완료', false, String(e.message ?? e).slice(0, 300));
